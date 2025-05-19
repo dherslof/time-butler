@@ -14,6 +14,8 @@
     - [Modify](#modify)
     - [Info](#info)
   - [Building](#building)
+    - [Installation](#installation)
+    - [Development run](#development-run)
     - [App](#app)
     - [Documentation](#documentation)
   - [Usage](#usage)
@@ -29,7 +31,6 @@
 **TimeButler** aims to be your quick go-to tool for simple time reporting. It's easy to interact with through the command line and supports the basic tasks needed for time reporting.
 
 Fully developed in rust for personal use, but it can probably help more people then me to simplify understanding of where time is being spent.
-
 
 ## Functions
 
@@ -94,6 +95,26 @@ In the future, the possibility of setting the target hours for a project, month 
 **to-be-implemented**
 
 ## Building
+Cargo is used for building and installation. At the time of writing, nothing is pushed to [creates.io](https://crates.io/)
+
+```bash
+# Clone sources
+$ git clone <repo-path> && cd time-butler
+
+# Build release with cargo
+$ cargo build --release
+```
+
+### Installation
+```bash
+# From repo root
+$ cargo install --path .
+```
+
+### Development run
+```bash
+RUST_LOG=debug cargo run -- <command-to-run>
+```
 
 ### App
 
@@ -140,7 +161,7 @@ time-butler add entry --project <my_project> --hours 8 --description "Fixed a bu
 - [X] List current stored Days in specific week
 - [X] Option for getting simple information regarding current state of time-butler
 - [X] First version of a *okey* project readme
-- [ ] Add building instructions
+- [X] Add building instructions
 - [ ] Basic tests
 - [ ] Basic github actions
 - [X] Improve the hour calculation in Day, to take minutes in to account
