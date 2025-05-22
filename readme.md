@@ -16,8 +16,10 @@
   - [Building](#building)
     - [Installation](#installation)
     - [Development run](#development-run)
-    - [App](#app)
-    - [Documentation](#documentation)
+  - [App](#app)
+    - [Environment](#environment)
+    - [Storage](#storage)
+  - [Documentation](#documentation)
   - [Usage](#usage)
     - [Intended workflow](#intended-workflow)
       - [Working hours per day](#working-hours-per-day)
@@ -116,9 +118,17 @@ $ cargo install --path .
 RUST_LOG=debug cargo run -- <command-to-run>
 ```
 
-### App
+## App
 
-### Documentation
+### Environment
+time-butler is to start with, only supported in linux.
+
+### Storage
+By default, time-butler uses following path as a work directory: `/home/$USER/.local/time-butler`.
+All generated reports etc. will be found at a corresponding sub-directory and easy to understand.
+
+## Documentation
+Todo: Add instructions for cargo docs and more if needed
 
 ## Usage
 For detailed usage info, use the `--help`.

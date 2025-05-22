@@ -16,3 +16,4 @@ uuid = { version = "1.2", features = ["serde", "v4"] }                       # F
 comfy-table = "7.0"                                                          # For table printing
 csv = "1.1"                                                                  # For writing csv reports
 maud = "0.25"                                                                # For writing html
+dirs = "5.0.1"                                                               # For home directory
