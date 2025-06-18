@@ -6,10 +6,10 @@
  * License: MIT
  */
 
+use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
 use std::io::Write;
-use std::collections::HashMap;
 
 use chrono::{DateTime, Local};
 use csv::Writer;
@@ -17,17 +17,16 @@ use maud::{html, Markup, PreEscaped};
 use serde_json::json;
 use serde_json::Value;
 
-
+use crate::day::Day;
 use crate::project::Project;
 use crate::week::Week;
-use crate::day::Day;
 // TODO: way to bundle the report stuff together?
+use crate::report::MonthReportColumns;
 use crate::report::ParseReportFormatError;
 use crate::report::ProjectReportColumns;
 use crate::report::ReportFormat;
 use crate::report::ReportGenerationFailure;
 use crate::report::WeekReportColumns;
-use crate::report::MonthReportColumns;
 
 //TODO: Improvement - Can the report creating functions be done in smarter way, feels stupid to repeat the same code for each report type
 
@@ -43,7 +42,10 @@ pub struct ReportManager {
 impl ReportManager {
     pub fn new() -> Self {
         Self {
-            default_report_dir: "generated_reports".to_string(),
+            default_report_dir: format!(
+                "{}/.local/time-butler/.generated_reports",
+                std::env::var("HOME").unwrap_or_else(|_| ".".to_string())
+            ),
             default_report_file_name: format!(
                 "{}_time_report.",
                 Local::now().format("%Y-%m-%d_%H-%M-%S")
@@ -636,7 +638,12 @@ impl ReportManager {
             .unwrap_or_else(|| "N/A".to_string())
     }
 
-    pub fn generate_month_report(&self, month_number: u32, format: ReportFormat, days_in_month: &Vec<Day>) -> Result<(), ReportGenerationFailure>{
+    pub fn generate_month_report(
+        &self,
+        month_number: u32,
+        format: ReportFormat,
+        days_in_month: &Vec<Day>,
+    ) -> Result<(), ReportGenerationFailure> {
         tracing::debug!("Setting report suffix");
         let report_suffix = match self.get_report_suffix(format.clone()) {
             Ok(suffix) => suffix,
@@ -645,9 +652,7 @@ impl ReportManager {
 
         let file_name = format!(
             "month{}_{}{}",
-            month_number,
-            self.default_report_file_name,
-            report_suffix
+            month_number, self.default_report_file_name, report_suffix
         );
 
         let file_path = format!("{}/{}", self.default_report_dir, file_name);
@@ -667,7 +672,12 @@ impl ReportManager {
 
         match format {
             ReportFormat::Csv => {
-                match self.write_csv_month_report(month_number,days_in_month, Some(columns), &file_path) {
+                match self.write_csv_month_report(
+                    month_number,
+                    days_in_month,
+                    Some(columns),
+                    &file_path,
+                ) {
                     Ok(_) => {
                         tracing::info!("Created report: {}", file_path);
                     }
@@ -678,7 +688,12 @@ impl ReportManager {
                 }
             }
             ReportFormat::Json => {
-                match self.write_json_month_report(month_number, days_in_month, Some(columns), &file_path) {
+                match self.write_json_month_report(
+                    month_number,
+                    days_in_month,
+                    Some(columns),
+                    &file_path,
+                ) {
                     Ok(_) => {
                         tracing::info!("Created report: {}", file_path);
                     }
@@ -689,7 +704,12 @@ impl ReportManager {
                 }
             }
             ReportFormat::Yaml => {
-                match self.write_yaml_month_report(month_number, days_in_month, Some(columns), &file_path) {
+                match self.write_yaml_month_report(
+                    month_number,
+                    days_in_month,
+                    Some(columns),
+                    &file_path,
+                ) {
                     Ok(_) => {
                         tracing::info!("Created report: {}", file_path);
                     }
@@ -700,7 +720,12 @@ impl ReportManager {
                 }
             }
             ReportFormat::Html => {
-                match self.write_html_month_report(month_number, days_in_month, Some(columns), &file_path) {
+                match self.write_html_month_report(
+                    month_number,
+                    days_in_month,
+                    Some(columns),
+                    &file_path,
+                ) {
                     Ok(_) => {
                         tracing::info!("Created report: {}", file_path);
                     }
@@ -719,8 +744,13 @@ impl ReportManager {
         Ok(())
     }
 
-
-    fn write_csv_month_report(&self,month_number: u32, month_days: &Vec<Day>, columns: Option<MonthReportColumns>, file_path: &str) -> Result<(), Box<dyn Error>> {
+    fn write_csv_month_report(
+        &self,
+        month_number: u32,
+        month_days: &Vec<Day>,
+        columns: Option<MonthReportColumns>,
+        file_path: &str,
+    ) -> Result<(), Box<dyn Error>> {
         tracing::debug!("Writing CSV report");
 
         // Creating the file
@@ -789,7 +819,8 @@ impl ReportManager {
                 for d in month_days {
                     let week_number = d.week();
 
-                    let formatted_start_time = self.format_datetime_to_report_string(d.starting_time());
+                    let formatted_start_time =
+                        self.format_datetime_to_report_string(d.starting_time());
                     let formatted_end_time = self.format_datetime_to_report_string(d.ending_time());
 
                     let day_json = json!({
@@ -801,7 +832,10 @@ impl ReportManager {
                         &c.eighth: d.closed()
                     });
 
-                    weeks_map.entry(week_number).or_insert_with(Vec::new).push(day_json);
+                    weeks_map
+                        .entry(week_number)
+                        .or_insert_with(Vec::new)
+                        .push(day_json);
                 }
 
                 // Convert the grouped data into a structured JSON
@@ -823,13 +857,13 @@ impl ReportManager {
             None => {
                 tracing::warn!("Columns not provided! Using JSON serialization for week report");
                 unimplemented!(); //TODO: Implement this
-
             }
         }
         return Ok(());
     }
 
-    fn write_yaml_month_report(&self,
+    fn write_yaml_month_report(
+        &self,
         month_number: u32,
         month_days: &Vec<Day>,
         columns: Option<MonthReportColumns>,
@@ -846,33 +880,67 @@ impl ReportManager {
                 for d in month_days {
                     let week_number = d.week();
 
-                    let formatted_start_time = self.format_datetime_to_report_string(d.starting_time());
+                    let formatted_start_time =
+                        self.format_datetime_to_report_string(d.starting_time());
                     let formatted_end_time = self.format_datetime_to_report_string(d.ending_time());
 
                     let mut day_yaml = serde_yaml::Mapping::new();
-                    day_yaml.insert(serde_yaml::Value::String(c.third.clone()), serde_yaml::Value::String(d.date().to_string()));
-                    day_yaml.insert(serde_yaml::Value::String(c.fourth.clone()), serde_yaml::Value::String(formatted_start_time));
-                    day_yaml.insert(serde_yaml::Value::String(c.fifth.clone()), serde_yaml::Value::String(formatted_end_time));
-                    day_yaml.insert(serde_yaml::Value::String(c.sixth.clone()), serde_yaml::Value::Number(d.hours().into()));
-                    day_yaml.insert(serde_yaml::Value::String(c.seventh.clone()), serde_yaml::Value::String(d.extra_info().to_string()));
-                    day_yaml.insert(serde_yaml::Value::String(c.eighth.clone()), serde_yaml::Value::Bool(d.closed()));
+                    day_yaml.insert(
+                        serde_yaml::Value::String(c.third.clone()),
+                        serde_yaml::Value::String(d.date().to_string()),
+                    );
+                    day_yaml.insert(
+                        serde_yaml::Value::String(c.fourth.clone()),
+                        serde_yaml::Value::String(formatted_start_time),
+                    );
+                    day_yaml.insert(
+                        serde_yaml::Value::String(c.fifth.clone()),
+                        serde_yaml::Value::String(formatted_end_time),
+                    );
+                    day_yaml.insert(
+                        serde_yaml::Value::String(c.sixth.clone()),
+                        serde_yaml::Value::Number(d.hours().into()),
+                    );
+                    day_yaml.insert(
+                        serde_yaml::Value::String(c.seventh.clone()),
+                        serde_yaml::Value::String(d.extra_info().to_string()),
+                    );
+                    day_yaml.insert(
+                        serde_yaml::Value::String(c.eighth.clone()),
+                        serde_yaml::Value::Bool(d.closed()),
+                    );
 
-                    weeks_map.entry(week_number).or_insert_with(Vec::new).push(serde_yaml::Value::Mapping(day_yaml));
+                    weeks_map
+                        .entry(week_number)
+                        .or_insert_with(Vec::new)
+                        .push(serde_yaml::Value::Mapping(day_yaml));
                 }
 
                 // Convert the grouped data into a structured YAML format
                 let mut weeks_yaml = Vec::new();
                 for (week, days) in weeks_map {
                     let mut week_entry = serde_yaml::Mapping::new();
-                    week_entry.insert(serde_yaml::Value::String(c.second.clone()), serde_yaml::Value::Number(week.into()));
-                    week_entry.insert(serde_yaml::Value::String("Days".to_string()), serde_yaml::Value::Sequence(days));
+                    week_entry.insert(
+                        serde_yaml::Value::String(c.second.clone()),
+                        serde_yaml::Value::Number(week.into()),
+                    );
+                    week_entry.insert(
+                        serde_yaml::Value::String("Days".to_string()),
+                        serde_yaml::Value::Sequence(days),
+                    );
                     weeks_yaml.push(serde_yaml::Value::Mapping(week_entry));
                 }
 
                 // Construct the final YAML report
                 let mut yaml_report = serde_yaml::Mapping::new();
-                yaml_report.insert(serde_yaml::Value::String(c.first.clone()), serde_yaml::Value::Number(month_number.into()));
-                yaml_report.insert(serde_yaml::Value::String("Weeks".to_string()), serde_yaml::Value::Sequence(weeks_yaml));
+                yaml_report.insert(
+                    serde_yaml::Value::String(c.first.clone()),
+                    serde_yaml::Value::Number(month_number.into()),
+                );
+                yaml_report.insert(
+                    serde_yaml::Value::String("Weeks".to_string()),
+                    serde_yaml::Value::Sequence(weeks_yaml),
+                );
 
                 let yaml_string = serde_yaml::to_string(&yaml_report)?;
                 report_file.write_all(yaml_string.as_bytes())?;
@@ -903,8 +971,12 @@ impl ReportManager {
                 // Group days by week number
                 for d in month_days {
                     let week_number = d.week();
-                    let formatted_start_time = d.starting_time().map_or_else(|| "N/A".to_string(), |t| t.to_string());
-                    let formatted_end_time = d.ending_time().map_or_else(|| "N/A".to_string(), |t| t.to_string());
+                    let formatted_start_time = d
+                        .starting_time()
+                        .map_or_else(|| "N/A".to_string(), |t| t.to_string());
+                    let formatted_end_time = d
+                        .ending_time()
+                        .map_or_else(|| "N/A".to_string(), |t| t.to_string());
 
                     let row = vec![
                         d.date().to_string(),
@@ -915,7 +987,10 @@ impl ReportManager {
                         d.closed().to_string(),
                     ];
 
-                    weeks_map.entry(week_number).or_insert_with(Vec::new).push(row);
+                    weeks_map
+                        .entry(week_number)
+                        .or_insert_with(Vec::new)
+                        .push(row);
                 }
 
                 // Build the HTML markup
