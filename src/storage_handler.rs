@@ -205,17 +205,10 @@ impl StorageHandler {
     }
 
     fn init(&mut self) {
+        tracing::info!("inside init");
         tracing::debug!("Initializing storage handler");
         if cfg!(not(target_os = "linux")) {
             tracing::error!("Time-butler is only supported on Linux");
-        }
-
-        // Check if this is the first run
-        if !fs::metadata(&self.storage_dir).is_ok() {
-            tracing::info!("First run detected, creating storage directory");
-            self.first_run = true;
-        } else {
-            tracing::debug!("Storage directory already exists, not first run");
         }
 
         // Todo: Check if a configuration file exists, if not set default paths
@@ -236,6 +229,15 @@ impl StorageHandler {
                 self.week_data_file_path
             );
             self.storage_dir = format!("{}/{}/{}", home_dir.display(), BASE_PATH, self.storage_dir);
+
+            // Check if this is the first run
+            if !fs::metadata(&self.storage_dir).is_ok() {
+                tracing::info!("First run detected, creating storage directory");
+                self.first_run = true;
+            } else {
+                tracing::debug!("Storage directory already exists, not first run");
+            }
+
             if self.first_run {
                 // Create the storage directory
                 fs::create_dir_all(&self.storage_dir).expect("Failed to create storage directory");
