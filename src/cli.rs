@@ -44,14 +44,15 @@ pub enum Commands {
         #[command(subcommand)]
         entity: ReportSubcommands,
     },
+    /// List already reported items
     List {
         /// Project name
         #[arg(short, long)]
         project: Option<String>,
-        /// Week number
+        /// Week number - if multiple weeks exists with same number, all will be listed
         #[arg(short, long)]
         week: Option<String>,
-        /// Month number
+        /// Month number - if multiple months exists with same number, all will be listed
         #[arg(short, long)]
         month: Option<String>,
         /// Display all weeks
@@ -61,6 +62,7 @@ pub enum Commands {
         #[arg(long, action = clap::ArgAction::SetTrue)]
         all_projects: bool,
     },
+    /// Remove a already store item
     Remove {
         /// Project name
         #[command(subcommand)]
@@ -74,6 +76,9 @@ pub enum Commands {
         /// Entry ID
         #[arg(short, long)]
         entry: Option<String>,
+        /// Day date
+        #[arg(short, long)]
+        day: Option<String>,
     },
 
     /// Short Info regarding internal storage
@@ -88,7 +93,7 @@ pub enum Commands {
         /// Target times info
         #[command(subcommand)]
         entity: TargetTimesSubcommands,
-    }
+    },
 }
 
 /// Enum for "add" subcommands
@@ -132,11 +137,13 @@ pub enum AddSubcommands {
 /// Enum for "remove" subcommands
 #[derive(Subcommand)]
 pub enum RemoveSubcommands {
+    /// Remove a project and all its entries
     Project {
         /// Project name
         #[arg(short, long)]
         name: String,
     },
+    /// Remove a specific entry from a project
     Entry {
         /// Project name
         #[arg(long)]
@@ -145,6 +152,7 @@ pub enum RemoveSubcommands {
         #[arg(long)]
         id: Option<String>,
     },
+    /// Remove a specific day from a week
     Day {
         /// Date
         #[arg(long)]
@@ -185,6 +193,9 @@ pub enum ReportSubcommands {
         /// Week number
         #[arg(short, long)]
         number: u32,
+        /// Year number
+        #[arg(short, long)]
+        year: u32,
         /// Report format, valid options are: "json, csv, yaml, html, pdf, text"`
         #[arg(short, long)]
         format: String,
@@ -194,6 +205,9 @@ pub enum ReportSubcommands {
         /// Month number
         #[arg(short, long)]
         number: u32,
+        /// Year number
+        #[arg(short, long)]
+        year: u32,
         /// Report format, valid options are: "json, csv, yaml, html, pdf, text"`
         #[arg(short, long)]
         format: String,
@@ -216,12 +230,18 @@ pub enum TargetTimesSubcommands {
         /// Week number
         #[arg(short, long)]
         number: u32,
+        /// Year number
+        #[arg(short, long)]
+        year: u32,
     },
     /// Set target for the month
     Month {
         /// Month number
         #[arg(short, long)]
         number: u32,
+        /// Year number
+        #[arg(short, long)]
+        year: u32,
     },
 }
 

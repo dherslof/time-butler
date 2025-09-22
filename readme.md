@@ -173,13 +173,13 @@ time-butler add entry --project <my_project> --hours 8 --description "Fixed a bu
 - [X] First version of a *okey* project readme
 - [X] Add building instructions
 - [ ] Basic tests
-- [ ] Basic github actions
+- [X] Basic github actions pipeline setup
 - [X] Improve the hour calculation in Day, to take minutes in to account
 - [ ] Update project hours type to float. Will brake existing serializing for current users.
 - [ ] Fix all `clippy` warnings
 - [ ] Read settings (storage path etc) from config files places under /home/user/.conf/time-butler/time-butler.conf
 - [X] Add Target, with status for stored time containers
-- [ ] Verify all the document comments for cli. Make sure they are updated and correct.
+- [X] Verify all the document comments for cli. Make sure they are updated and correct.
 - [ ] Refactor out the butler table functions to a separate file.
 
 **Version 1.1.0**
@@ -189,7 +189,7 @@ time-butler add entry --project <my_project> --hours 8 --description "Fixed a bu
 - [ ] Implement the *modify* command
 - [ ] Removal of week
 - [ ] Add a simple backup function, to store files managed by the butler
-- [ ] Create a verification function for storage of years. If you have week1 in both 2025 and 2024 it has be handled by year. Possible solution to add the year in the struct as well.
+- [X] Create a verification function for storage of years. If you have week1 in both 2025 and 2024 it has be handled by year. Possible solution to add the year in the struct as well.
 - [ ] Add functionality in day, to talk in the lunch time in hours worked. Should be a default value + config
 - [ ] Refactor the Target *todos*
 

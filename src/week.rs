@@ -17,14 +17,17 @@ pub struct Week {
     number: u32,
     /// Week  entries
     entries: Vec<Day>,
+    /// Year
+    year: i32,
 }
 
 impl Week {
     /// Create a new week
-    pub fn new(number: u32) -> Self {
+    pub fn new(number: u32, year: i32) -> Self {
         Self {
             number,
             entries: Vec::new(),
+            year,
         }
     }
 
@@ -36,6 +39,10 @@ impl Week {
     /// Getter for `entries`
     pub fn entries(&self) -> &Vec<Day> {
         &self.entries
+    }
+
+    pub fn year(&self) -> i32 {
+        self.year
     }
 
     /// Add a new entry to the project

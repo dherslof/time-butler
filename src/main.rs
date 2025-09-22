@@ -15,10 +15,12 @@ mod project;
 mod report;
 mod report_manager;
 mod storage_handler;
-mod week;
 mod target;
+mod week;
 
-use cli::{AddSubcommands, Cli, Commands, RemoveSubcommands, ReportSubcommands, TargetTimesSubcommands};
+use cli::{
+    AddSubcommands, Cli, Commands, RemoveSubcommands, ReportSubcommands, TargetTimesSubcommands,
+};
 use std::process;
 use tracing::Level;
 use tracing_subscriber::EnvFilter;
@@ -133,15 +135,23 @@ fn main() {
                     tracing::info!("Project report generated successfully!");
                 }
             }
-            ReportSubcommands::Week { number, format } => {
+            ReportSubcommands::Week {
+                number,
+                format,
+                year,
+            } => {
                 tracing::debug!("Generating Week report");
-                if butler.week_report(number, &format) {
+                if butler.week_report(number, &format, year) {
                     tracing::info!("Report for week {} generated successfully!", number);
                 }
             }
-            ReportSubcommands::Month { number, format } => {
+            ReportSubcommands::Month {
+                number,
+                format,
+                year,
+            } => {
                 tracing::debug!("Generating Month report");
-                if butler.month_report(number, &format) {
+                if butler.month_report(number, &format, year) {
                     tracing::info!("Report for month {} generated successfully!", number);
                 }
             }
@@ -234,29 +244,52 @@ fn main() {
             }
         },
         Commands::Modify { .. } => todo!(), // all other commands
-        Commands::Info {short } => {
+        Commands::Info { short } => {
             tracing::debug!("Displaying storage info!");
             butler.self_info(short);
-
         }
-        Commands::Targets {entity } => match entity {
-            TargetTimesSubcommands::Week { number } => {
-                tracing::debug!("Displaying target times for week {}", number);
-                if !butler.display_week_target_status(number) {
-                    tracing::error!("Failed to display target times for week {}", number);
+        Commands::Targets { entity } => match entity {
+            TargetTimesSubcommands::Week { number, year } => {
+                tracing::debug!(
+                    "Displaying target times for week {} in year {}",
+                    number,
+                    year
+                );
+                if !butler.display_week_target_status(number, year) {
+                    tracing::error!(
+                        "Failed to display target times for week {} in year {}",
+                        number,
+                        year
+                    );
                 } else {
-                    tracing::info!("Target times for week {} displayed successfully!", number);
+                    tracing::info!(
+                        "Target times for week {} displayed in year {} successfully!",
+                        number,
+                        year
+                    );
                 }
             }
-            TargetTimesSubcommands::Month { number } => {
-                tracing::debug!("Displaying target times for month{}", number);
-                if !butler.display_month_target_status(number) {
-                    tracing::error!("Failed to display target times for week {}", number);
+            TargetTimesSubcommands::Month { number, year } => {
+                tracing::debug!(
+                    "Displaying target times for month{} in year {}",
+                    number,
+                    year
+                );
+                if !butler.display_month_target_status(number, year) {
+                    tracing::error!(
+                        "Failed to display target times for week {} in year {}",
+                        number,
+                        year
+                    );
                 } else {
-                    tracing::info!("Target times for week {} displayed successfully!", number);
+                    tracing::info!(
+                        "Target times for week {} displayed in year {} successfully!",
+                        number,
+                        year
+                    );
                 }
             }
-        }
+        },
     }
 
     if store_data {
