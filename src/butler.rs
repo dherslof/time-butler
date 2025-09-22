@@ -6,7 +6,9 @@
  * License: MIT
  */
 
+use chrono::Datelike;
 use comfy_table::{Cell, ContentArrangement, Table};
+use std::collections::BTreeMap;
 use std::io::{self, Write};
 use uuid::Uuid;
 
@@ -17,8 +19,8 @@ use crate::project::Project;
 use crate::report::ReportFormat;
 use crate::report_manager::ReportManager;
 use crate::storage_handler::StorageHandler;
+use crate::target::{MonthlyTargetStatus, WeeklyTargetStatus};
 use crate::week::Week;
-use crate::target::{WeeklyTargetStatus, MonthlyTargetStatus};
 
 /// Butler struct - Main star of the show
 pub struct Butler {
@@ -182,7 +184,7 @@ impl Butler {
     }
 
     /// Create a new week report
-    pub fn week_report(&self, week_number: u32, format: &str) -> bool {
+    pub fn week_report(&self, week_number: u32, format: &str, year: u32) -> bool {
         let report_format = match format {
             "json" => ReportFormat::Json,
             "csv" => ReportFormat::Csv,
@@ -196,9 +198,9 @@ impl Butler {
             }
         };
 
-        // Search for the week
+        // Search for the week with both week number and year
         for w in &self.weeks {
-            if w.number() == week_number {
+            if w.number() == week_number && w.year() as u32 == year {
                 match self.storage_handler.create_report_dir() {
                     Ok(_) => (),
                     Err(e) => {
@@ -220,11 +222,15 @@ impl Butler {
             }
         }
 
-        tracing::error!("Week with number {} not found", week_number);
+        tracing::error!(
+            "Week with number {} and year {} not found",
+            week_number,
+            year
+        );
         return false;
     }
 
-    pub fn month_report(&self, month_number: u32, format: &str) -> bool {
+    pub fn month_report(&self, month_number: u32, format: &str, year: u32) -> bool {
         let report_format = match format {
             "json" => ReportFormat::Json,
             "csv" => ReportFormat::Csv,
@@ -243,9 +249,19 @@ impl Butler {
             return false;
         }
 
-        let days = self.get_days_in_month(month_number);
+        // Only include days from the specified year
+        let days: Vec<Day> = self
+            .get_days_in_month(month_number)
+            .into_iter()
+            .filter(|d| d.year() as u32 == year)
+            .collect();
+
         if days.is_empty() {
-            tracing::warn!("No days found for month: {}", month_number);
+            tracing::warn!(
+                "No days found for month: {} and year: {}",
+                month_number,
+                year
+            );
             return false;
         }
 
@@ -257,14 +273,17 @@ impl Butler {
             }
         }
 
-        let generation_result = match self.report_mngr.generate_month_report(
-            month_number, report_format, &days) {
-            Ok(_) => true,
-            Err(e) => {
-                tracing::error!("failed to generate report: {}", e);
-                false
-            }
-        };
+        let generation_result =
+            match self
+                .report_mngr
+                .generate_month_report(month_number, report_format, &days)
+            {
+                Ok(_) => true,
+                Err(e) => {
+                    tracing::error!("failed to generate report: {}", e);
+                    false
+                }
+            };
 
         return generation_result;
     }
@@ -323,12 +342,14 @@ impl Butler {
         table.set_content_arrangement(ContentArrangement::Dynamic);
 
         table.set_header(vec![
+            Cell::new("Year"),
             Cell::new("Week"),
             Cell::new("Number of days registered"),
         ]);
 
         for w in &self.weeks {
             table.add_row(vec![
+                Cell::new(&w.year().to_string()),
                 Cell::new(&w.number().to_string()),
                 Cell::new(&w.entries().len().to_string()),
             ]);
@@ -339,38 +360,47 @@ impl Butler {
 
     /// List a specific week, will show all days stored for that specific week
     pub fn list_specific_week(&self, week_number: u32) {
+        // Group weeks by year (for easier reading)
+        let mut weeks_by_year: BTreeMap<i32, &Week> = BTreeMap::new();
         for w in &self.weeks {
             if w.number() == week_number {
-                let mut table = Self::get_table_day();
-
-                for d in w.entries() {
-                    let start_time = match d.starting_time() {
-                        Some(st) => st.to_string(),
-                        None => "N/A".to_string(),
-                    };
-
-                    let end_time = match d.ending_time() {
-                        Some(et) => et.to_string(),
-                        None => "N/A".to_string(),
-                    };
-
-                    table.add_row(vec![
-                        Cell::new(&d.week().to_string()),
-                        Cell::new(&d.date().to_string()),
-                        Cell::new(start_time),
-                        Cell::new(end_time),
-                        Cell::new(&d.hours().to_string()),
-                        Cell::new(&d.closed().to_string()),
-                        Cell::new(&d.extra_info()),
-                    ]);
-                }
-
-                println!("{}", table);
-                return;
+                weeks_by_year.insert(w.year(), w);
             }
         }
 
-        tracing::error!("Week with number {} not found", week_number);
+        if weeks_by_year.is_empty() {
+            tracing::error!("Week with number {} not found", week_number);
+            return;
+        }
+
+        for (year, week) in weeks_by_year {
+            println!("Year: {}", year);
+            let mut table = Self::get_table_day();
+
+            for d in week.entries() {
+                let start_time = match d.starting_time() {
+                    Some(st) => st.to_string(),
+                    None => "N/A".to_string(),
+                };
+
+                let end_time = match d.ending_time() {
+                    Some(et) => et.to_string(),
+                    None => "N/A".to_string(),
+                };
+
+                table.add_row(vec![
+                    Cell::new(&d.week().to_string()),
+                    Cell::new(&d.date().to_string()),
+                    Cell::new(start_time),
+                    Cell::new(end_time),
+                    Cell::new(&d.hours().to_string()),
+                    Cell::new(&d.closed().to_string()),
+                    Cell::new(&d.extra_info()),
+                ]);
+            }
+
+            println!("{}", table);
+        }
     }
 
     pub fn list_specific_month(&self, month_number: u32) {
@@ -385,33 +415,41 @@ impl Butler {
             return;
         }
 
-        let mut table = Self::get_table_day();
-
+        use std::collections::BTreeMap;
+        let mut days_by_year: BTreeMap<i32, Vec<Day>> = BTreeMap::new();
         for d in days {
-            let start_time = match d.starting_time() {
-                Some(st) => st.to_string(),
-                None => "N/A".to_string(),
-            };
-
-            let end_time = match d.ending_time() {
-                Some(et) => et.to_string(),
-                None => "N/A".to_string(),
-            };
-
-            table.add_row(vec![
-                Cell::new(&d.week().to_string()),
-                Cell::new(&d.date().to_string()),
-                Cell::new(start_time),
-                Cell::new(end_time),
-                Cell::new(&d.hours().to_string()),
-                Cell::new(&d.closed().to_string()),
-                Cell::new(&d.extra_info()),
-            ]);
+            days_by_year.entry(d.year()).or_default().push(d);
         }
 
-        println!("{}", table);
-    }
+        for (year, days) in days_by_year {
+            println!("Year: {}", year);
+            let mut table = Self::get_table_day();
 
+            for d in days {
+                let start_time = match d.starting_time() {
+                    Some(st) => st.to_string(),
+                    None => "N/A".to_string(),
+                };
+
+                let end_time = match d.ending_time() {
+                    Some(et) => et.to_string(),
+                    None => "N/A".to_string(),
+                };
+
+                table.add_row(vec![
+                    Cell::new(&d.week().to_string()),
+                    Cell::new(&d.date().to_string()),
+                    Cell::new(start_time),
+                    Cell::new(end_time),
+                    Cell::new(&d.hours().to_string()),
+                    Cell::new(&d.closed().to_string()),
+                    Cell::new(&d.extra_info()),
+                ]);
+            }
+
+            println!("{}", table);
+        }
+    }
 
     /// Add new entry to project
     pub fn add_entry(&mut self, project_name: &str, entry: Entry) -> bool {
@@ -446,7 +484,7 @@ impl Butler {
         // If no week exists, no idea to search and do the potential merge. Just create and add
         if self.weeks.is_empty() {
             tracing::info!("Weeks list is empty, creating new week");
-            let mut new_week = Week::new(day.week());
+            let mut new_week = Week::new(day.week(), day.year());
             // Print the new added day as confirmation to user, quite nice verification
             Self::print_day_in_report_table(&day);
             new_week.add_entry(day);
@@ -457,7 +495,7 @@ impl Butler {
             // If weeks exists, search for the week and add the day
             for (i, w) in self.weeks.iter_mut().enumerate() {
                 // Find correct week
-                if w.number() == day.week() {
+                if w.number() == day.week() && w.year() == day.year() {
                     // Correct week found
                     if w.exists(&day) {
                         tracing::info!(
@@ -501,7 +539,7 @@ impl Butler {
                     if i == last_item_index {
                         // Last element in list, create new week
                         tracing::debug!("Didn't find week {}, creating new week", day.week());
-                        let mut new_week = Week::new(day.week());
+                        let mut new_week = Week::new(day.week(), day.year());
 
                         // Print the new added day as confirmation to user, before adding to week and loose ownership
                         Self::print_day_in_report_table(&day);
@@ -659,23 +697,30 @@ impl Butler {
             return false;
         }
 
-        // Search for week, if week exists, search for the day
-        for w in &mut self.weeks {
-            if w.number() == week {
-                let date_format = "%Y-%m-%d";
-                let parsed_date = match chrono::NaiveDate::parse_from_str(&date, date_format) {
-                    Ok(parsed_date) => {
-                        tracing::debug!("Parsed date: {}", parsed_date);
-                        parsed_date
-                    }
-                    Err(e) => {
-                        tracing::error!("Failed to parse date: {}, for format: y-m-d", e);
-                        return false;
-                    }
-                };
+        let date_format = "%Y-%m-%d";
+        let parsed_date = match chrono::NaiveDate::parse_from_str(&date, date_format) {
+            Ok(parsed_date) => {
+                tracing::debug!("Parsed date: {}", parsed_date);
+                parsed_date
+            }
+            Err(e) => {
+                tracing::error!("Failed to parse date: {}, for format: y-m-d", e);
+                return false;
+            }
+        };
 
+        let year = parsed_date.year();
+
+        // Search for week with both week number and year
+        for w in &mut self.weeks {
+            if w.number() == week && w.year() == year {
                 if !w.exist(&parsed_date) {
-                    tracing::warn!("Day with date {} not found in week {}", date, week);
+                    tracing::warn!(
+                        "Day with date {} not found in week {} year {}",
+                        date,
+                        week,
+                        year
+                    );
                     return false;
                 }
 
@@ -689,14 +734,14 @@ impl Butler {
                     Cell::new(
                         day_cpy
                             .starting_time()
-                            .map(|dt| dt.to_string()) // Convert `DateTime<Local>` to `String`
-                            .unwrap_or_else(|| "N/A".to_string()), // Provide fallback as a `String)
+                            .map(|dt| dt.to_string())
+                            .unwrap_or_else(|| "N/A".to_string()),
                     ),
                     Cell::new(
                         day_cpy
                             .ending_time()
-                            .map(|dt| dt.to_string()) // Convert `DateTime<Local>` to `String`
-                            .unwrap_or_else(|| "N/A".to_string()), // Provide fallback as a `String)
+                            .map(|dt| dt.to_string())
+                            .unwrap_or_else(|| "N/A".to_string()),
                     ),
                     Cell::new(&day_cpy.hours().to_string()),
                     Cell::new(&day_cpy.closed().to_string()),
@@ -709,7 +754,12 @@ impl Butler {
                 )) {
                     // Remove day
                     w.remove_listed_day(&parsed_date);
-                    tracing::info!("Day {}, removed from week {}", parsed_date, week);
+                    tracing::info!(
+                        "Day {}, removed from week {} year {}",
+                        parsed_date,
+                        week,
+                        year
+                    );
                     return true;
                 } else {
                     tracing::warn!("Confirmation not given, aborting");
@@ -718,7 +768,12 @@ impl Butler {
             }
         }
 
-        tracing::warn!("Day with date {} not found in week {}", date, week);
+        tracing::warn!(
+            "Day with date {} not found in week {} year {}",
+            date,
+            week,
+            year
+        );
         return false;
     }
 
@@ -870,14 +925,14 @@ impl Butler {
         }
     }
 
-    pub fn display_week_target_status(&self, week: u32) -> bool {
+    pub fn display_week_target_status(&self, week: u32, year: u32) -> bool {
         if self.weeks.is_empty() {
             tracing::warn!("No weeks stored, unable to display weekly target status");
             return false;
         }
 
         for w in &self.weeks {
-            if w.number() == week {
+            if w.number() == week && w.year() as u32 == year {
                 let status = WeeklyTargetStatus::new(&w, &0.0); // TODO: Replace with actual target hours from config when implemented
                 let mut table = Self::get_table_target_week();
                 table.add_row(vec![
@@ -908,13 +963,13 @@ impl Butler {
         return false;
     }
 
-    pub fn display_month_target_status(&self, month_number: u32) -> bool {
+    pub fn display_month_target_status(&self, month_number: u32, year: u32) -> bool {
         if month_number < 1 || month_number > 12 {
             tracing::error!("Invalid month number: {}", month_number);
             return false;
         }
 
-        let days_vec = self.get_days_in_month(month_number);
+        let days_vec = self.get_days_in_month_for_year(month_number, year);
         if days_vec.is_empty() {
             tracing::warn!("No days found for month: {}", month_number);
             return false;
@@ -951,6 +1006,18 @@ impl Butler {
         for w in &self.weeks {
             for d in w.entries() {
                 if d.month() == month {
+                    days.push(d.clone());
+                }
+            }
+        }
+        days
+    }
+
+    fn get_days_in_month_for_year(&self, month: u32, year: u32) -> Vec<Day> {
+        let mut days = Vec::new();
+        for w in &self.weeks {
+            for d in w.entries() {
+                if d.month() == month && d.year() as u32 == year {
                     days.push(d.clone());
                 }
             }
