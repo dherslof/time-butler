@@ -127,6 +127,8 @@ time-butler is to start with, only supported in linux.
 By default, time-butler uses following path as a work directory: `/home/$USER/.local/time-butler`.
 All generated reports etc. will be found at a corresponding sub-directory and easy to understand.
 
+The file names, and storage path's can be changed by passing a custom configuration file as argument. Details can be found (here)[doc/readme_support/configuration.md]
+
 ## Documentation
 Todo: Add instructions for cargo docs and more if needed
 
@@ -177,7 +179,7 @@ time-butler add entry --project <my_project> --hours 8 --description "Fixed a bu
 - [X] Improve the hour calculation in Day, to take minutes in to account
 - [ ] Update project hours type to float. Will brake existing serializing for current users.
 - [ ] Fix all `clippy` warnings
-- [ ] Read settings (storage path etc) from config files places under /home/user/.conf/time-butler/time-butler.conf
+- [X] Read settings (storage path etc) from config file
 - [X] Add Target, with status for stored time containers
 - [X] Verify all the document comments for cli. Make sure they are updated and correct.
 - [ ] Refactor out the butler table functions to a separate file.
@@ -190,6 +192,6 @@ time-butler add entry --project <my_project> --hours 8 --description "Fixed a bu
 - [ ] Removal of week
 - [ ] Add a simple backup function, to store files managed by the butler
 - [X] Create a verification function for storage of years. If you have week1 in both 2025 and 2024 it has be handled by year. Possible solution to add the year in the struct as well.
-- [ ] Add functionality in day, to talk in the lunch time in hours worked. Should be a default value + config
+- [ ] Add functionality in day, to take in the lunch time in hours worked. Should be a default value + config
 - [ ] Refactor the Target *todos*
 

@@ -27,6 +27,9 @@ pub struct Cli {
     /// Generate JSON output from logging
     #[arg(short, long, action = clap::ArgAction::SetTrue)]
     pub json: bool,
+    /// Configuration file path. Absolute path.
+    #[arg(short, long, default_value = "tb-config.json")]
+    pub config: String,
 }
 
 /// Enum to define available subcommands

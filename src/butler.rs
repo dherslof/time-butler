@@ -13,6 +13,7 @@ use std::io::{self, Write};
 use uuid::Uuid;
 
 use crate::cli_interactor::{CliCommand, CliInteractor};
+use crate::config::AppConfiguration;
 use crate::day::Day;
 use crate::entry::Entry;
 use crate::project::Project;
@@ -34,18 +35,21 @@ pub struct Butler {
     storage_handler: StorageHandler,
     /// User interaction functionality
     user_interactor: CliInteractor,
+    /// Configuration
+    configuration: AppConfiguration,
 }
 
 /// Implementation of the functionality for the Butler
 impl Butler {
     /// Create a new Butler
-    pub fn new() -> Self {
+    pub fn new(storage_handler: StorageHandler, configuration: AppConfiguration) -> Self {
         Self {
             projects: Vec::new(),
             weeks: Vec::new(),
             report_mngr: ReportManager::new(),
-            storage_handler: StorageHandler::new(),
+            storage_handler,
             user_interactor: CliInteractor::new(),
+            configuration,
         }
     }
 
@@ -84,6 +88,11 @@ impl Butler {
     /// Init the butler in order to get the saved data from the storage etc.
     pub fn init(&mut self) {
         tracing::debug!("Initializing the Butler!");
+
+        // Update the file paths based on configuratoin
+        self.storage_handler
+            .set_paths_from_config(&self.configuration);
+
         // Load projects from storage
         if let Some(projects) = self.storage_handler.load_projects() {
             self.projects = projects;
