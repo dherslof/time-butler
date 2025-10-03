@@ -9,6 +9,8 @@
 mod butler;
 mod cli;
 mod cli_interactor;
+mod config;
+mod config_reader;
 mod day;
 mod entry;
 mod project;
@@ -21,12 +23,15 @@ mod week;
 use cli::{
     AddSubcommands, Cli, Commands, RemoveSubcommands, ReportSubcommands, TargetTimesSubcommands,
 };
+use std::path::Path;
 use std::process;
 use tracing::Level;
 use tracing_subscriber::EnvFilter;
 
 use butler::Butler;
 use clap::Parser;
+
+use crate::config::AppConfiguration;
 
 // Error codes
 const K_BUTLER_SAVE_FAILED: i32 = 1;
@@ -64,8 +69,61 @@ fn main() {
 
     tracing::debug!("Creating the Butler!");
 
+    // Interactive mode variables
     let mut store_data = false;
-    let mut butler = Butler::new();
+
+    // Init the butler
+    let storage_handler = storage_handler::StorageHandler::new();
+
+    // Check if config is provided by argument, if not try to read the default path
+    let config_path = if args.config != "tb-config.json" {
+        args.config.clone()
+    } else {
+        let default_path = storage_handler.startup_storage_directory() + "/tb-config.json";
+        if Path::new(&default_path).exists() {
+            tracing::debug!(
+                "Using default configuration file at {}",
+                default_path.as_str()
+            );
+            default_path
+        } else {
+            // Just for logging, default path will be set
+            tracing::debug!("No configuration file provided and default not found. Time-butler will create a new default configuration: {}", default_path.as_str());
+            default_path
+        }
+    };
+
+    let user_specific_home_directory = storage_handler.user_home_directory();
+    tracing::debug!("Using configuration file at {}", config_path.as_str());
+    let mut config_reader = config_reader::ConfigReader::new(&config_path.as_str());
+    // Read config, if fail create the new default one
+    match config_reader.read_config() {
+        Ok(_) => {
+            tracing::info!("Configuration file read successfully");
+        }
+        Err(e) => {
+            tracing::warn!("Failed to read configuration file: '{}'. A new default configuration will be created at: {}", e, config_path.as_str());
+            let default_config = AppConfiguration::new_default(&user_specific_home_directory);
+            match config_reader.write_config(&default_config) {
+                Ok(_) => {
+                    tracing::info!(
+                        "Default configuration file created successfully at: {}",
+                        config_path.as_str()
+                    );
+                }
+                Err(e) => {
+                    tracing::error!("Failed to create default configuration file: {}", e);
+                }
+            }
+        }
+    }
+
+    tracing::debug!("Creating the Butler!");
+    let butler_config = config_reader
+        .get_configuration()
+        .cloned()
+        .unwrap_or_else(|| AppConfiguration::new_default(&user_specific_home_directory.clone()));
+    let mut butler = Butler::new(storage_handler, butler_config);
 
     butler.init();
 

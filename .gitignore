@@ -2,3 +2,4 @@
 .app_storage/*
 generated_reports/*
 Cargo.lock
+.vscode

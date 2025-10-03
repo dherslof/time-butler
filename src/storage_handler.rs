@@ -15,6 +15,7 @@ use std::path::Path;
 
 use bincode;
 
+use crate::config::AppConfiguration;
 use crate::project::Project;
 use crate::week::Week;
 
@@ -35,6 +36,8 @@ pub struct StorageHandler {
     storage_dir: String,
     /// Report directory
     report_dir: String,
+    /// User home directory
+    user_home_dir: String,
     /// Flag to indicate if a successful init has been done
     init_success: bool,
     /// Flag to indicate if this is the first run
@@ -49,6 +52,7 @@ impl StorageHandler {
             week_data_file_path: WEEK_DATA_FILE.to_string(),
             storage_dir: STORAGE_DIR.to_string(),
             report_dir: REPORT_DIR.to_string(),
+            user_home_dir: String::new(),
             init_success: false,
             first_run: false,
         };
@@ -205,7 +209,6 @@ impl StorageHandler {
     }
 
     fn init(&mut self) {
-        tracing::info!("inside init");
         tracing::debug!("Initializing storage handler");
         if cfg!(not(target_os = "linux")) {
             tracing::error!("Time-butler is only supported on Linux");
@@ -245,10 +248,33 @@ impl StorageHandler {
 
             self.report_dir = format!("{}/{}/{}", home_dir.display(), BASE_PATH, self.report_dir);
 
+            self.user_home_dir = format!("{}", home_dir.display());
+
             tracing::debug!("Default paths set");
             self.init_success = true;
         } else {
             tracing::error!("Could not find home directory");
         }
+    }
+
+    pub fn startup_storage_directory(&self) -> String {
+        self.storage_dir.clone()
+    }
+
+    pub fn user_home_directory(&self) -> String {
+        self.user_home_dir.clone()
+    }
+
+    pub fn set_paths_from_config(&mut self, config: &AppConfiguration) {
+        tracing::debug!("Setting storage paths from configuration");
+        tracing::debug!("Storage directory: {}", config.storage_directory());
+        self.storage_dir = config.storage_directory();
+
+        tracing::debug!("Project data path: {}", config.project_data_path());
+        self.project_data_file_path = config.project_data_path();
+        tracing::debug!("Week data path: {}", config.week_data_path());
+        self.week_data_file_path = config.week_data_path();
+        tracing::debug!("Report directory: {}", config.report_directory());
+        self.report_dir = config.report_directory();
     }
 }
