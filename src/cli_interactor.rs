@@ -22,7 +22,8 @@ pub enum CliCommand {
     Exit,
 }
 
-/// Parse error for ReportFormat
+/// Parse error for ReportFormat. Allow dead code now, since it might be used later. If not used in release 1.0.0 - Remove it
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct UserInteractionFailure;
 

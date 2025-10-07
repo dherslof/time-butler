@@ -6,35 +6,35 @@
  * License: MIT
  */
 
- use crate::week::Week;
- use crate::day::Day;
+use crate::day::Day;
+use crate::week::Week;
 
- const K_100_PERCENT: u32 = 100;
- const K_TARGET_HOURS_NOT_SET: f32 = 0.0;
- const K_DEFAULT_WEEK_TARGET_HOURS: f32 = 40.0;
- const K_DEFAULT_MONTH_TARGET_HOURS: f32 = 160.0;
+const K_100_PERCENT: u32 = 100;
+const K_TARGET_HOURS_NOT_SET: f32 = 0.0;
+const K_DEFAULT_WEEK_TARGET_HOURS: f32 = 40.0;
+const K_DEFAULT_MONTH_TARGET_HOURS: f32 = 160.0;
 
- /// TargetStatus enum to represent the progress of the target
- #[derive(Debug, Clone)]
- enum TargetStatus {
+/// TargetStatus enum to represent the progress of the target
+#[derive(Debug, Clone)]
+enum TargetStatus {
     /// Target is set, not sure if this is needed
     Reached,
     /// Target is not reached
     NotReached,
     /// Target is overreached
     OverReached,
- }
+}
 
- /// TargetStatus enum to represent how the target was set
- #[derive(Debug, Clone)]
- enum TargetSetMethod {
+/// TargetStatus enum to represent how the target was set
+#[derive(Debug, Clone)]
+enum TargetSetMethod {
     /// Target is set from config
     SetFromConfig,
     /// Target is set from default
     SetFromDefault,
- }
+}
 
- /// Weekly-Target struct to store the target and status of the week
+/// Weekly-Target struct to store the target and status of the week
 #[derive(Debug, Clone)]
 pub struct WeeklyTargetStatus {
     /// Target for the week
@@ -83,7 +83,6 @@ impl WeeklyTargetStatus {
             status_hours += day.hours();
         }
 
-        //let mut target_status = TargetStatus::NotReached;
         let target_set_method = if target_hours_conf != &K_TARGET_HOURS_NOT_SET {
             TargetSetMethod::SetFromConfig
         } else {
@@ -170,8 +169,7 @@ impl MonthlyTargetStatus {
             status_hours += day.hours();
         }
 
-       //let mut target_status = TargetStatus::NotReached;
-       let target_set_method = if target_hours_conf != &K_TARGET_HOURS_NOT_SET {
+        let target_set_method = if target_hours_conf != &K_TARGET_HOURS_NOT_SET {
             TargetSetMethod::SetFromConfig
         } else {
             TargetSetMethod::SetFromDefault
