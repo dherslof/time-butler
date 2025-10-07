@@ -11,7 +11,8 @@ use serde::{Deserialize, Serialize};
 /// Application configuration struct
 #[derive(Serialize, Deserialize, Clone)]
 pub struct AppConfiguration {
-    pub file_paths: FilePathsConfig,
+    file_paths: FilePathsConfig,
+    targets: TargetsConfig,
 }
 
 impl AppConfiguration {
@@ -30,6 +31,18 @@ impl AppConfiguration {
     pub fn report_directory(&self) -> String {
         self.file_paths.report_directory.clone()
     }
+
+    pub fn week_target_hours(&self) -> f32 {
+        self.targets.week_target_hours.clone()
+    }
+
+    pub fn month_target_hours(&self) -> f32 {
+        self.targets.month_target_hours.clone()
+    }
+
+    pub fn weekly_target_for_month(&self) -> bool {
+        self.targets.weekly_target_for_month
+    }
 }
 
 impl AppConfiguration {
@@ -47,7 +60,15 @@ impl AppConfiguration {
             ),
             report_directory: format!("{}/.local/time-butler/.generated_reports", user_home),
         };
-        Self { file_paths }
+        let targets = TargetsConfig {
+            week_target_hours: 40.0,
+            month_target_hours: 160.0,
+            weekly_target_for_month: false,
+        };
+        Self {
+            file_paths,
+            targets,
+        }
     }
 }
 
@@ -62,4 +83,17 @@ pub struct FilePathsConfig {
     pub week_data_path: String,
     #[serde(rename = "time-butler-report-generation-directory")]
     pub report_directory: String,
+}
+/// Targets configuration struct
+#[derive(Serialize, Deserialize, Clone)]
+pub struct TargetsConfig {
+    /// Target hours for the week
+    #[serde(rename = "total-week-target")]
+    pub week_target_hours: f32,
+    /// Target hours for the month
+    #[serde(rename = "total-month-target")]
+    pub month_target_hours: f32,
+    /// Use the combined weekly target for the month
+    #[serde(rename = "use-total-week-target-for-month")]
+    pub weekly_target_for_month: bool,
 }

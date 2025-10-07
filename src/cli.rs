@@ -222,7 +222,7 @@ pub enum ReportSubcommands {
         number: u32,
         /// Report format, valid options are: "json, csv, yaml, html, pdf, text"`
         #[arg(short, long)]
-        format: Option<String>,
+        format: String,
     },
 }
 

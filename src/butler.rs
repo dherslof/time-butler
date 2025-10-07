@@ -493,7 +493,11 @@ impl Butler {
         // If no week exists, no idea to search and do the potential merge. Just create and add
         if self.weeks.is_empty() {
             tracing::info!("Weeks list is empty, creating new week");
-            let mut new_week = Week::new(day.week(), day.year());
+            let mut new_week = Week::new(
+                day.week(),
+                day.year(),
+                self.configuration.week_target_hours(),
+            );
             // Print the new added day as confirmation to user, quite nice verification
             Self::print_day_in_report_table(&day);
             new_week.add_entry(day);
@@ -548,7 +552,11 @@ impl Butler {
                     if i == last_item_index {
                         // Last element in list, create new week
                         tracing::debug!("Didn't find week {}, creating new week", day.week());
-                        let mut new_week = Week::new(day.week(), day.year());
+                        let mut new_week = Week::new(
+                            day.week(),
+                            day.year(),
+                            self.configuration.week_target_hours(),
+                        );
 
                         // Print the new added day as confirmation to user, before adding to week and loose ownership
                         Self::print_day_in_report_table(&day);
@@ -942,7 +950,7 @@ impl Butler {
 
         for w in &self.weeks {
             if w.number() == week && w.year() as u32 == year {
-                let status = WeeklyTargetStatus::new(&w, &0.0); // TODO: Replace with actual target hours from config when implemented
+                let status = WeeklyTargetStatus::new(&w, &w.target_hours());
                 let mut table = Self::get_table_target_week();
                 table.add_row(vec![
                     Cell::new(week),
@@ -984,7 +992,25 @@ impl Butler {
             return false;
         }
 
-        let status = MonthlyTargetStatus::new(&days_vec, &0.0); // TODO: Replace with actual target hours from config when implemented
+        let weeks_in_month = self.get_weeks_in_month(month_number);
+        if weeks_in_month.is_empty() {
+            tracing::warn!("No weeks found for month: {}", month_number);
+            return false;
+        }
+
+        let mut month_target_hours: f32 = 0.0;
+        if self.configuration.weekly_target_for_month() {
+            tracing::debug!("Calculating month target hours based on weekly target hours");
+            // Calculate month target hours based on number of weeks in month and weekly target hours
+            for w in &weeks_in_month {
+                month_target_hours += w.target_hours();
+            }
+        } else {
+            tracing::debug!("Calculating month target hours based on configuration value");
+            month_target_hours = self.configuration.month_target_hours();
+        }
+
+        let status = MonthlyTargetStatus::new(&days_vec, &month_target_hours);
         let mut table = Self::get_table_target_month();
 
         table.add_row(vec![
@@ -1046,6 +1072,20 @@ impl Butler {
             }
         }
         days
+    }
+
+    /// Get the weeks in a month
+    fn get_weeks_in_month(&self, month: u32) -> Vec<Week> {
+        let mut weeks = Vec::new();
+        for w in &self.weeks {
+            for d in w.entries() {
+                if d.month() == month {
+                    weeks.push(w.clone());
+                    break; // No need to check other days in the week
+                }
+            }
+        }
+        weeks
     }
 
     /// Display current stored projects
@@ -1171,5 +1211,3 @@ impl Butler {
         println!("{}", table);
     }
 }
-
-//TODO: Read in configuration file with file paths, working hour threshold etc.

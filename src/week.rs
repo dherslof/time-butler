@@ -19,15 +19,18 @@ pub struct Week {
     entries: Vec<Day>,
     /// Year
     year: i32,
+    /// Target hours
+    target_hours: f32,
 }
 
 impl Week {
     /// Create a new week
-    pub fn new(number: u32, year: i32) -> Self {
+    pub fn new(number: u32, year: i32, target_hours: f32) -> Self {
         Self {
             number,
             entries: Vec::new(),
             year,
+            target_hours,
         }
     }
 
@@ -44,6 +47,16 @@ impl Week {
     pub fn year(&self) -> i32 {
         self.year
     }
+
+    pub fn target_hours(&self) -> f32 {
+        self.target_hours
+    }
+
+    // Uncomment if needed
+    //  pub fn target_hours_reached(&self) -> bool {
+    //      let total_hours: f32 = self.entries.iter().map(|d| d.hours()).sum();
+    //      total_hours >= self.target_hours
+    //  }
 
     /// Add a new entry to the project
     pub fn add_entry(&mut self, entry: Day) {

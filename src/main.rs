@@ -96,24 +96,40 @@ fn main() {
     let user_specific_home_directory = storage_handler.user_home_directory();
     tracing::debug!("Using configuration file at {}", config_path.as_str());
     let mut config_reader = config_reader::ConfigReader::new(&config_path.as_str());
+
     // Read config, if fail create the new default one
+    let using_default_path = args.config == "tb-config.json";
+    let config_file_exists = Path::new(&config_path).exists();
+
     match config_reader.read_config() {
         Ok(_) => {
             tracing::info!("Configuration file read successfully");
         }
         Err(e) => {
-            tracing::warn!("Failed to read configuration file: '{}'. A new default configuration will be created at: {}", e, config_path.as_str());
-            let default_config = AppConfiguration::new_default(&user_specific_home_directory);
-            match config_reader.write_config(&default_config) {
-                Ok(_) => {
-                    tracing::info!(
-                        "Default configuration file created successfully at: {}",
-                        config_path.as_str()
-                    );
+            if using_default_path && !config_file_exists {
+                tracing::warn!(
+                    "No configuration file found. Creating a new default configuration at: {}",
+                    config_path.as_str()
+                );
+                let default_config = AppConfiguration::new_default(&user_specific_home_directory);
+                match config_reader.write_config(&default_config) {
+                    Ok(_) => {
+                        tracing::info!(
+                            "Default configuration file created successfully at: {}",
+                            config_path.as_str()
+                        );
+                    }
+                    Err(e) => {
+                        tracing::error!("Failed to create default configuration file: {}", e);
+                    }
                 }
-                Err(e) => {
-                    tracing::error!("Failed to create default configuration file: {}", e);
-                }
+            } else {
+                tracing::error!(
+                    "Failed to read configuration file '{}': {}. Please fix or remove the file.",
+                    config_path.as_str(),
+                    e
+                );
+                std::process::exit(1);
             }
         }
     }
@@ -214,7 +230,11 @@ fn main() {
                 }
             }
             ReportSubcommands::Year { number, format } => {
-                tracing::debug!("Generating Year report");
+                tracing::debug!(
+                    "Generating Year report for year {} with format: {}",
+                    number,
+                    &format
+                );
                 unimplemented!();
             }
         },
