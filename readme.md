@@ -129,6 +129,17 @@ All generated reports etc. will be found at a corresponding sub-directory and ea
 
 The file names, and storage path's can be changed by passing a custom configuration file as argument. Details can be found (here)[doc/readme_support/configuration.md]
 
+### Backups
+By default semi-automated backups of data will be done on a defined time interval. Reason for it to be semi-automated is that `time-butler` will do it without the
+user interaction. However, the butler still need to be executed since it's not running as a daemon. Time data is stored in a deticated backup directory. 
+The interval and location can be changed from the config file.
+
+A backup can also be force triggered by the user from the **CLI** using the `backup` command:
+
+```bash
+time-butler backup --now
+```
+
 ## Documentation
 Todo: Add instructions for cargo docs and more if needed
 
@@ -190,7 +201,7 @@ time-butler add entry --project <my_project> --hours 8 --description "Fixed a bu
 - [ ] Add year as a option for reports
 - [ ] Implement the *modify* command
 - [ ] Removal of week
-- [ ] Add a simple backup function, to store files managed by the butler
+- [X] Add a simple backup function, to store files managed by the butler
 - [X] Create a verification function for storage of years. If you have week1 in both 2025 and 2024 it has be handled by year. Possible solution to add the year in the struct as well.
 - [ ] Add functionality in day, to take in the lunch time in hours worked. Should be a default value + config
 - [ ] Refactor the Target *todos*

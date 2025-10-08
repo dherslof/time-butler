@@ -599,7 +599,27 @@ impl Butler {
             return false;
         }
 
+        self.storage_handler.backup_storage_files(
+            self.configuration.periodic_backup_enabled(),
+            self.configuration.override_existing_backup(),
+            self.configuration.periodic_backup_interval(),
+        );
+
         return true;
+    }
+
+    pub fn force_backup(&self) -> bool {
+        tracing::info!("Forcing backup of time-butler data");
+        match self.storage_handler.do_backup_now() {
+            Ok(_) => {
+                tracing::info!("Backup completed successfully");
+                return true;
+            }
+            Err(e) => {
+                tracing::error!("Backup failed: {}", e);
+                return false;
+            }
+        }
     }
 
     /// Remove a project from the Butler

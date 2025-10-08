@@ -97,6 +97,12 @@ pub enum Commands {
         #[command(subcommand)]
         entity: TargetTimesSubcommands,
     },
+
+    /// Force trigger backup of time-butler data
+    Backup {
+        #[arg(long, action = clap::ArgAction::SetTrue)]
+        now: bool,
+    },
 }
 
 /// Enum for "add" subcommands
@@ -248,7 +254,17 @@ pub enum TargetTimesSubcommands {
     },
 }
 
-//TODO:
+#[derive(Subcommand)]
+pub enum BackupSubcommands {
+    /// Force trigger a backup directly
+    Now {
+        #[arg(long, action = clap::ArgAction::SetTrue)]
+        trigger_now: bool,
+    },
+    // Tis can be extented in the future if needed
+}
+
+//TODO (later):
 // * Extend the CLI with entries for month and year as well
 // * Add modify subcommand
 // * Add subcommand for summary of the report, both when generating and taking file as input

@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 pub struct AppConfiguration {
     file_paths: FilePathsConfig,
     targets: TargetsConfig,
+    backup: BackupConfig,
 }
 
 impl AppConfiguration {
@@ -36,12 +37,28 @@ impl AppConfiguration {
         self.targets.week_target_hours.clone()
     }
 
+    pub fn backup_directory(&self) -> String {
+        self.file_paths.backups_directory.clone()
+    }
+
     pub fn month_target_hours(&self) -> f32 {
         self.targets.month_target_hours.clone()
     }
 
     pub fn weekly_target_for_month(&self) -> bool {
-        self.targets.weekly_target_for_month
+        self.targets.weekly_target_for_month.clone()
+    }
+
+    pub fn periodic_backup_enabled(&self) -> bool {
+        self.backup.enable_periodic_backup.clone()
+    }
+
+    pub fn periodic_backup_interval(&self) -> u32 {
+        self.backup.periodic_backup_interval_days.clone()
+    }
+
+    pub fn override_existing_backup(&self) -> bool {
+        self.backup.override_existing_backup.clone()
     }
 }
 
@@ -58,16 +75,23 @@ impl AppConfiguration {
                 "{}/.local/time-butler/.app_storage/week_data.bin",
                 user_home
             ),
-            report_directory: format!("{}/.local/time-butler/.generated_reports", user_home),
+            report_directory: format!("{}/.local/time-butler/generated_reports", user_home),
+            backups_directory: format!("{}/.local/time-butler/backups", user_home),
         };
         let targets = TargetsConfig {
             week_target_hours: 40.0,
             month_target_hours: 160.0,
             weekly_target_for_month: false,
         };
+        let backup = BackupConfig {
+            enable_periodic_backup: false,
+            periodic_backup_interval_days: 14,
+            override_existing_backup: true,
+        };
         Self {
             file_paths,
             targets,
+            backup,
         }
     }
 }
@@ -83,6 +107,8 @@ pub struct FilePathsConfig {
     pub week_data_path: String,
     #[serde(rename = "time-butler-report-generation-directory")]
     pub report_directory: String,
+    #[serde(rename = "time-butler-backups-directory")]
+    pub backups_directory: String,
 }
 /// Targets configuration struct
 #[derive(Serialize, Deserialize, Clone)]
@@ -96,4 +122,18 @@ pub struct TargetsConfig {
     /// Use the combined weekly target for the month
     #[serde(rename = "use-total-week-target-for-month")]
     pub weekly_target_for_month: bool,
+}
+
+/// Backup configuration struct
+#[derive(Serialize, Deserialize, Clone)]
+pub struct BackupConfig {
+    /// Target hours for the week
+    #[serde(rename = "enable-periodic-backup")]
+    pub enable_periodic_backup: bool,
+    /// Target hours for the week
+    #[serde(rename = "periodic-backup-days-interval")]
+    pub periodic_backup_interval_days: u32,
+    /// Target hours for the week
+    #[serde(rename = "periodic-backup-override")]
+    pub override_existing_backup: bool,
 }
