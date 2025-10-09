@@ -60,6 +60,57 @@ impl AppConfiguration {
     pub fn override_existing_backup(&self) -> bool {
         self.backup.override_existing_backup.clone()
     }
+
+    pub fn get_as_string(&self) -> String {
+        // format complete config as a String in order to print/write it
+        let mut out = String::new();
+        out.push_str("Configuration:\n");
+        out.push_str(&format!(
+            "  time-butler-storage-directory: {}\n",
+            self.file_paths.storage_directory
+        ));
+        out.push_str(&format!(
+            "  time-butler-project-data-path: {}\n",
+            self.file_paths.project_data_path
+        ));
+        out.push_str(&format!(
+            "  time-butler-week-data-path: {}\n",
+            self.file_paths.week_data_path
+        ));
+        out.push_str(&format!(
+            "  time-butler-report-generation-directory: {}\n",
+            self.file_paths.report_directory
+        ));
+        out.push_str(&format!(
+            "  time-butler-backups-directory: {}\n",
+            self.file_paths.backups_directory
+        ));
+        out.push_str(&format!(
+            "  total-week-target: {}\n",
+            self.targets.week_target_hours
+        ));
+        out.push_str(&format!(
+            "  total-month-target: {}\n",
+            self.targets.month_target_hours
+        ));
+        out.push_str(&format!(
+            "  use-total-week-target-for-month: {}\n",
+            self.targets.weekly_target_for_month
+        ));
+        out.push_str(&format!(
+            "  enable-periodic-backup: {}\n",
+            self.backup.enable_periodic_backup
+        ));
+        out.push_str(&format!(
+            "  periodic-backup-days-interval: {}\n",
+            self.backup.periodic_backup_interval_days
+        ));
+        out.push_str(&format!(
+            "  periodic-backup-override: {}\n",
+            self.backup.override_existing_backup
+        ));
+        out
+    }
 }
 
 impl AppConfiguration {

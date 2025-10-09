@@ -45,6 +45,11 @@ impl ConfigReader {
         self.configuration.as_ref()
     }
 
+    /// Get read configuration file path
+    pub fn get_configuration_file_path_string(&self) -> String {
+        self.config_path.clone()
+    }
+
     /// Write new configuration to the file
     pub fn write_config(
         &self,

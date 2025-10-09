@@ -103,6 +103,13 @@ pub enum Commands {
         #[arg(long, action = clap::ArgAction::SetTrue)]
         now: bool,
     },
+
+    // Time-butler configuration
+    Configuration {
+        /// Target times info
+        #[command(subcommand)]
+        config: ConfigurationSubcommands,
+    },
 }
 
 /// Enum for "add" subcommands
@@ -255,13 +262,16 @@ pub enum TargetTimesSubcommands {
 }
 
 #[derive(Subcommand)]
-pub enum BackupSubcommands {
-    /// Force trigger a backup directly
-    Now {
+pub enum ConfigurationSubcommands {
+    /// Dump current used configuration
+    Dump {
+        // Dump to terminal
         #[arg(long, action = clap::ArgAction::SetTrue)]
-        trigger_now: bool,
+        dump_terminal: bool,
+        /// Dump configuration to a file
+        #[arg(short, long)]
+        dump_file: Option<String>,
     },
-    // Tis can be extented in the future if needed
 }
 
 //TODO (later):

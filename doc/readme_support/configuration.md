@@ -37,3 +37,17 @@ For more details, you can always run:
 ```bash
 time-butler --help
 ```
+
+## Dump configuration
+In order to get a quick overview of the current configuration used, or to see where the configuration file are stored the `dump` functionality can be used. 
+The configuration can be dumped both to the terminal or to a file. 
+
+To dump configuration, use the `configuration` command. 
+
+```bash
+# To terminal
+time-butler configuration dump --dump-terminal
+
+# To file
+time-butler configuration dump --dump-file tmp-storage/time-butler-config.dump
+```

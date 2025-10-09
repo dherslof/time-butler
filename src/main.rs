@@ -22,7 +22,8 @@ mod target;
 mod week;
 
 use cli::{
-    AddSubcommands, Cli, Commands, RemoveSubcommands, ReportSubcommands, TargetTimesSubcommands,
+    AddSubcommands, Cli, Commands, ConfigurationSubcommands, RemoveSubcommands, ReportSubcommands,
+    TargetTimesSubcommands,
 };
 use std::path::Path;
 use std::process;
@@ -99,7 +100,8 @@ fn main() {
     let mut config_reader = config_reader::ConfigReader::new(&config_path.as_str());
 
     // Read config, if fail create the new default one
-    let using_default_path = args.config == "tb-config.json";
+    let default_path = storage_handler.startup_storage_directory() + "/tb-config.json";
+    let using_default_path = config_path == default_path;
     let config_file_exists = Path::new(&config_path).exists();
 
     match config_reader.read_config() {
@@ -381,6 +383,26 @@ fn main() {
                 tracing::info!("Project data backup flag not set, skipping.");
             }
         }
+        Commands::Configuration { config } => match config {
+            ConfigurationSubcommands::Dump {
+                dump_terminal,
+                dump_file,
+            } => {
+                if dump_terminal {
+                    tracing::info!("Dumping current configuration to terminal:");
+                    butler.dump_configuration_to_terminal(
+                        config_reader.get_configuration_file_path_string(),
+                    );
+                }
+                if let Some(file_path) = dump_file {
+                    tracing::info!("Dumping current configuration to file: {}", file_path);
+                    butler.dump_configuration_to_file(
+                        config_reader.get_configuration_file_path_string(),
+                        file_path,
+                    );
+                }
+            }
+        },
     }
 
     if store_data {
