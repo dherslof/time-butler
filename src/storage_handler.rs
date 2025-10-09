@@ -6,7 +6,6 @@
  * License: MIT
  */
 
-//use std::env;
 use std::fs;
 use std::io;
 use std::io::Read;
@@ -15,6 +14,7 @@ use std::path::Path;
 
 use bincode;
 
+use crate::backup_organizer::BackupOrganizer;
 use crate::config::AppConfiguration;
 use crate::project::Project;
 use crate::week::Week;
@@ -25,6 +25,7 @@ const STORAGE_DIR: &str = ".app_storage";
 const REPORT_DIR: &str = ".generated_reports";
 const PROJECT_DATA_FILE: &str = "prj_data.bin";
 const WEEK_DATA_FILE: &str = "week_data.bin";
+const BACKUP_DIR: &str = "backups";
 
 /// The storage handler struct
 pub struct StorageHandler {
@@ -42,6 +43,7 @@ pub struct StorageHandler {
     init_success: bool,
     /// Flag to indicate if this is the first run
     first_run: bool,
+    backup_organizer: BackupOrganizer,
 }
 
 /// Implementation for StorageHandler functionality
@@ -55,8 +57,17 @@ impl StorageHandler {
             user_home_dir: String::new(),
             init_success: false,
             first_run: false,
+            backup_organizer: BackupOrganizer::new("", "", "", ""), // dummy
         };
         instance.init();
+
+        // Now the correct paths are set
+        instance.backup_organizer = BackupOrganizer::new(
+            format!("{}/{}", &instance.storage_dir, BACKUP_DIR).as_str(),
+            &instance.project_data_file_path,
+            &instance.week_data_file_path,
+            &instance.storage_dir,
+        );
         instance
     }
 
@@ -276,5 +287,47 @@ impl StorageHandler {
         self.week_data_file_path = config.week_data_path();
         tracing::debug!("Report directory: {}", config.report_directory());
         self.report_dir = config.report_directory();
+
+        self.backup_organizer = BackupOrganizer::new(
+            config.backup_directory().as_str(),
+            self.project_data_file_path.as_str(),
+            self.week_data_file_path.as_str(),
+            self.storage_dir.as_str(),
+        );
+    }
+
+    pub fn backup_storage_files(
+        &self,
+        backup_enabled: bool,
+        override_existing_backup: bool,
+        backup_duration_interval: u32,
+    ) {
+        match self.backup_organizer.backup_data(
+            backup_enabled,
+            override_existing_backup,
+            backup_duration_interval,
+            Some(true),
+        ) {
+            Ok(_) => {
+                tracing::debug!("Backup completed successfully.");
+            }
+            Err(e) => {
+                tracing::error!("Backup failed: {}", e);
+            }
+        }
+    }
+
+    pub fn do_backup_now(&self) -> Result<(), Box<dyn std::error::Error>> {
+        // You can adjust these arguments as needed, or make them configurable
+        let backup_enabled = true;
+        let override_existing_backup = false;
+        let backup_duration_interval = 0;
+
+        self.backup_organizer.backup_data(
+            backup_enabled,
+            override_existing_backup,
+            backup_duration_interval,
+            Some(false),
+        )
     }
 }

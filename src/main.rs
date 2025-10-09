@@ -6,6 +6,7 @@
  * License: MIT
  */
 
+mod backup_organizer;
 mod butler;
 mod cli;
 mod cli_interactor;
@@ -368,6 +369,18 @@ fn main() {
                 }
             }
         },
+        Commands::Backup { now } => {
+            tracing::debug!("Backup ProjectData requested");
+            if now {
+                if butler.force_backup() {
+                    tracing::info!("Data backup completed successfully!");
+                } else {
+                    tracing::error!("Project data backup failed!");
+                }
+            } else {
+                tracing::info!("Project data backup flag not set, skipping.");
+            }
+        }
     }
 
     if store_data {
