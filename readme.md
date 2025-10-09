@@ -88,7 +88,8 @@ Similar to `Report` but only lists [weeks](<path>) or [projects](<path>) direct 
 ### Target
 Displays the amount of registered time compared to a set target.
 
-In the future, the possibility of setting the target hours for a project, month and week. Initial version will have hard coded targets to **40h/week** and **160h/month**.
+The possibility of setting the target hours for a month and week. Default targets will set to **40h/week** and **160h/month**. Target values 
+can be updated in the configuration file.
 
 ### Modify
 **to-be-implemented**

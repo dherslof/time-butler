@@ -1056,6 +1056,35 @@ impl Butler {
         return true;
     }
 
+    pub fn dump_configuration_to_terminal(&self, configuration_file_path: String) {
+        let config_str = self.configuration.get_as_string();
+        println!(
+            "Current configuration (from {}):\n{}",
+            configuration_file_path, config_str
+        );
+    }
+
+    pub fn dump_configuration_to_file(&self, configuration_file_path: String, output_file: String) {
+        let config_str = self.configuration.get_as_string();
+        let output = format!(
+            "Current configuration (from {}):\n{}",
+            configuration_file_path, config_str
+        );
+
+        match std::fs::write(&output_file, output) {
+            Ok(_) => {
+                tracing::debug!("Configuration successfully dumped to file: {}", output_file);
+            }
+            Err(e) => {
+                tracing::error!(
+                    "Failed to write configuration to file {}: {}",
+                    output_file,
+                    e
+                );
+            }
+        }
+    }
+
     fn get_days_in_month(&self, month: u32) -> Vec<Day> {
         let mut days = Vec::new();
         for w in &self.weeks {
