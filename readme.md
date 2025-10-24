@@ -161,6 +161,11 @@ And check out in the end of the day. An extra note or description can also be ad
 time-butler add day --ending-time --extra-info "Worked with something fun!"
 ```
 
+If time should be excluded from the day for some reason (lunch maybe) it can be added with the `--paused-hours` argument. The day checkout would then look like:
+```bash
+time-butler add day --ending-time --extra-info "Worked with something fun!" --paused-hours 1
+```
+
 #### Working hours on a project
 Log time to a ongoing project directly:
 ```bash
@@ -195,15 +200,16 @@ time-butler add entry --project <my_project> --hours 8 --description "Fixed a bu
 - [X] Add Target, with status for stored time containers
 - [X] Verify all the document comments for cli. Make sure they are updated and correct.
 - [ ] Refactor out the butler table functions to a separate file.
+- [ ] Implement the *modify* command
+- [X] Add initial pause function to a day, in order to exclude total work hours
 
 **Version 1.1.0**
 - [ ] Full Implement the *info* command.
 - [X] Add month as a option for reports
 - [ ] Add year as a option for reports
-- [ ] Implement the *modify* command
 - [ ] Removal of week
 - [X] Add a simple backup function, to store files managed by the butler
 - [X] Create a verification function for storage of years. If you have week1 in both 2025 and 2024 it has be handled by year. Possible solution to add the year in the struct as well.
-- [ ] Add functionality in day, to take in the lunch time in hours worked. Should be a default value + config
+- [ ] Add functionality in day, to set a default paused time per day via config and also how big that pause should be.
 - [ ] Refactor the Target *todos*
 

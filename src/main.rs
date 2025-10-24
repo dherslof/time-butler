@@ -185,6 +185,7 @@ fn main() {
                 extra_info,
                 starting_time,
                 ending_time,
+                paused_hours,
             } => {
                 tracing::debug!("Adding new day");
                 let mut d = day::Day::new(extra_info);
@@ -195,6 +196,15 @@ fn main() {
 
                 if ending_time == true {
                     d.set_ending_time(Some(&chrono::Local::now()));
+                }
+
+                let paused_hours_f32 = match paused_hours {
+                    Some(ref s) => s.parse::<f32>().unwrap_or(0.0),
+                    None => 0.0,
+                };
+
+                if paused_hours_f32 != 0.0 {
+                    d.set_paused_time(paused_hours_f32);
                 }
 
                 if butler.add_day(d) {

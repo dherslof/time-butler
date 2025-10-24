@@ -36,6 +36,8 @@ pub struct Day {
     ending_time_set: bool,
     // Flag to show if the day is closed
     closed: bool,
+    // Time duration as paused
+    hours_paused: f32,
 }
 
 impl Day {
@@ -52,6 +54,7 @@ impl Day {
             start_time_set: false,
             ending_time_set: false,
             closed: false,
+            hours_paused: K_NO_HOURS,
         }
     }
 
@@ -85,6 +88,11 @@ impl Day {
     /// Getter for `ending_time`
     pub fn ending_time(&self) -> Option<&DateTime<Local>> {
         self.ending_time.as_ref()
+    }
+
+    /// Getter for houres paused
+    pub fn hours_paused(&self) -> f32 {
+        self.hours_paused
     }
 
     /// Setter for `starting_time`
@@ -138,7 +146,16 @@ impl Day {
         }
     }
 
-    // Getter for `week`
+    /// Set paused time
+    pub fn set_paused_time(&mut self, paused: f32) {
+        if self.start_time_set {
+            self.hours_paused = paused;
+        } else {
+            tracing::warn!("Cannot set paused time before starting time is set. Provided paused time will be ignored");
+        }
+    }
+
+    /// Getter for `week`
     pub fn week(&self) -> u32 {
         self.week
     }
@@ -185,11 +202,20 @@ impl Day {
         };
 
         tracing::debug!("Calculated duration: {:?}", duration);
-        //duration.num_hours() as u32
 
         // Get the duration as minutes, and then convert to hours on order to not round away the minutes
-        let minutes = duration.num_minutes();
-        minutes as f32 / 60.0
+        let worked_hours = duration.num_minutes() as f32 / 60.0;
+
+        let net_hours = worked_hours - self.hours_paused;
+
+        // Prevent negative hours
+        if net_hours < 0.0 {
+            tracing::warn!("Worked hours (net hours) calculated as negative, [paused time = {}h]. Paused hours will not be considered", self.hours_paused);
+            tracing::debug!("Setting worked hours to: {}", worked_hours);
+            worked_hours
+        } else {
+            net_hours
+        }
     }
 }
 

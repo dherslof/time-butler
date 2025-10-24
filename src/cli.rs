@@ -147,6 +147,9 @@ pub enum AddSubcommands {
         /// Ending time flag, if set to true, the ending time will be set to the current time.
         #[arg(long, action = clap::ArgAction::SetTrue)]
         ending_time: bool,
+        /// Paused time during day - Time to exclude from the reported hours
+        #[arg(short, long)]
+        paused_hours: Option<String>,
     },
 }
 
