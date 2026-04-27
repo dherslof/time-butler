@@ -19,6 +19,7 @@ use crate::project::Project;
 use crate::report::ReportFormat;
 use crate::report_manager::ReportManager;
 use crate::storage_handler::StorageHandler;
+use crate::tables;
 use crate::target::{MonthlyTargetStatus, WeeklyTargetStatus};
 use crate::week::Week;
 
@@ -321,7 +322,7 @@ impl Butler {
     pub fn list_specific_project(&self, project_name: &str) {
         for p in &self.projects {
             if p.name() == project_name {
-                let mut table = Self::get_table_entry();
+                let mut table = tables::get_table_entry();
 
                 for e in p.entries() {
                     table.add_row(vec![
@@ -380,7 +381,7 @@ impl Butler {
 
         for (year, week) in weeks_by_year {
             println!("Year: {}", year);
-            let mut table = Self::get_table_day();
+            let mut table = tables::get_table_day();
 
             for d in week.entries() {
                 let start_time = match d.starting_time() {
@@ -428,7 +429,7 @@ impl Butler {
 
         for (year, days) in days_by_year {
             println!("Year: {}", year);
-            let mut table = Self::get_table_day();
+            let mut table = tables::get_table_day();
 
             for d in days {
                 let start_time = match d.starting_time() {
@@ -466,7 +467,7 @@ impl Butler {
                 p.add_entry(entry);
 
                 // Print new entry as confirmation to user
-                Self::print_entry_in_report_table(&entry_clone);
+                tables::print_entry_in_report_table(&entry_clone);
                 return true;
             }
         }
@@ -495,7 +496,7 @@ impl Butler {
                 self.configuration.week_target_hours(),
             );
             // Print the new added day as confirmation to user, quite nice verification
-            Self::print_day_in_report_table(&day);
+            tables::print_day_in_report_table(&day);
             new_week.add_entry(day);
             self.weeks.push(new_week);
             return true;
@@ -523,7 +524,7 @@ impl Butler {
                         let day_cpy = w.get_day_copy(&day.date()).unwrap(); // safe since day exists already
 
                         // Print the new added day as confirmation to user, quite nice verification
-                        Self::print_day_in_report_table(&day_cpy);
+                        tables::print_day_in_report_table(&day_cpy);
                         return true;
                     } else {
                         // Day don't exists in week
@@ -540,7 +541,7 @@ impl Butler {
                         let day_cpy = w.get_day_copy(&new_day_date).unwrap(); // safe since day exists already
 
                         // Print the new added day as confirmation to user, quite nice verification
-                        Self::print_day_in_report_table(&day_cpy);
+                        tables::print_day_in_report_table(&day_cpy);
                         return true;
                     }
                 } else {
@@ -555,7 +556,7 @@ impl Butler {
                         );
 
                         // Print the new added day as confirmation to user, before adding to week and loose ownership
-                        Self::print_day_in_report_table(&day);
+                        tables::print_day_in_report_table(&day);
 
                         new_week.add_entry(day);
                         self.weeks.push(new_week);
@@ -759,7 +760,7 @@ impl Butler {
 
                 let day_cpy = w.get_day_copy(&parsed_date).unwrap(); // safe since we know it exists
 
-                let mut table = Self::get_table_day();
+                let mut table = tables::get_table_day();
 
                 table.add_row(vec![
                     Cell::new(&day_cpy.week().to_string()),
@@ -819,7 +820,7 @@ impl Butler {
         for w in &self.weeks {
             if w.number() == week && w.year() as u32 == year {
                 let status = WeeklyTargetStatus::new(&w, &w.target_hours());
-                let mut table = Self::get_table_target_week();
+                let mut table = tables::get_table_target_week();
                 table.add_row(vec![
                     Cell::new(week),
                     Cell::new(status.target_hours().to_string()),
@@ -879,7 +880,7 @@ impl Butler {
         }
 
         let status = MonthlyTargetStatus::new(&days_vec, &month_target_hours);
-        let mut table = Self::get_table_target_month();
+        let mut table = tables::get_table_target_month();
 
         table.add_row(vec![
             Cell::new(month_number),
@@ -983,121 +984,5 @@ impl Butler {
             }
         }
         weeks
-    }
-
-    /// Internal function to get the table for printing a day
-    fn get_table_day() -> Table {
-        let mut table = Table::new();
-        table.set_content_arrangement(ContentArrangement::Dynamic);
-
-        table.set_header(vec![
-            Cell::new("Week"),
-            Cell::new("Date"),
-            Cell::new("Start time"),
-            Cell::new("End time"),
-            Cell::new("Paused hours"),
-            Cell::new("Hours"),
-            Cell::new("Closed"),
-            Cell::new("Extra info"),
-        ]);
-
-        table
-    }
-
-    /// Internal function to get a table for printing a entry in a project
-    fn get_table_entry() -> Table {
-        let mut table = Table::new();
-        table.set_content_arrangement(ContentArrangement::Dynamic);
-
-        table.set_header(vec![
-            Cell::new("Project"),
-            Cell::new("Description"),
-            Cell::new("Hours"),
-            Cell::new("Created"),
-            Cell::new("ID"),
-        ]);
-
-        table
-    }
-
-    /// Internal function to get a table for printing week target status
-    fn get_table_target_week() -> Table {
-        let mut table = Table::new();
-        table.set_content_arrangement(ContentArrangement::Dynamic);
-
-        table.set_header(vec![
-            Cell::new("Week"),
-            Cell::new("Target hours"),
-            Cell::new("Current reported hours"),
-            Cell::new("Percentage done"),
-            Cell::new("Target status"),
-            Cell::new("Hours remaining"),
-            Cell::new("Hours overtime"),
-            Cell::new("Target hours set method"),
-        ]);
-
-        table
-    }
-
-    /// Internal function to get a table for printing week target status
-    fn get_table_target_month() -> Table {
-        let mut table = Table::new();
-        table.set_content_arrangement(ContentArrangement::Dynamic);
-
-        table.set_header(vec![
-            Cell::new("Month"),
-            Cell::new("Target hours"),
-            Cell::new("Current reported hours"),
-            Cell::new("Percentage done"),
-            Cell::new("Target status"),
-            Cell::new("Hours remaining"),
-            Cell::new("Hours overtime"),
-            Cell::new("Target hours set method"),
-        ]);
-
-        table
-    }
-
-    // Internal function to print a single day, in report table format
-    fn print_day_in_report_table(day: &Day) {
-        let mut table = Self::get_table_day();
-
-        let start_time = match day.starting_time() {
-            Some(st) => st.to_string(),
-            None => "N/A".to_string(),
-        };
-
-        let end_time = match day.ending_time() {
-            Some(et) => et.to_string(),
-            None => "N/A".to_string(),
-        };
-
-        table.add_row(vec![
-            Cell::new(&day.week().to_string()),
-            Cell::new(&day.date().to_string()),
-            Cell::new(start_time),
-            Cell::new(end_time),
-            Cell::new(&day.hours_paused().to_string()),
-            Cell::new(&day.hours().to_string()),
-            Cell::new(&day.closed().to_string()),
-            Cell::new(&day.extra_info()),
-        ]);
-
-        println!("{}", table);
-    }
-
-    // Internal function to print a single entry, in report table format
-    fn print_entry_in_report_table(entry: &Entry) {
-        let mut table = Self::get_table_entry();
-
-        table.add_row(vec![
-            Cell::new("Project"),
-            Cell::new(entry.description()),
-            Cell::new(&entry.hours().to_string()),
-            Cell::new(&entry.created().to_string()),
-            Cell::new(&entry.id().to_string()),
-        ]);
-
-        println!("{}", table);
     }
 }

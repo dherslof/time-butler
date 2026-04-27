@@ -17,6 +17,7 @@ mod project;
 mod report;
 mod report_manager;
 mod storage_handler;
+mod tables;
 mod target;
 mod week;
 
