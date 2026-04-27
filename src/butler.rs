@@ -12,7 +12,6 @@ use std::collections::BTreeMap;
 use std::io::{self, Write};
 use uuid::Uuid;
 
-use crate::cli_interactor::{CliCommand, CliInteractor};
 use crate::config::AppConfiguration;
 use crate::day::Day;
 use crate::entry::Entry;
@@ -33,8 +32,6 @@ pub struct Butler {
     report_mngr: ReportManager,
     /// Storage functionality
     storage_handler: StorageHandler,
-    /// User interaction functionality
-    user_interactor: CliInteractor,
     /// Configuration
     configuration: AppConfiguration,
 }
@@ -48,7 +45,6 @@ impl Butler {
             weeks: Vec::new(),
             report_mngr: ReportManager::new(),
             storage_handler,
-            user_interactor: CliInteractor::new(),
             configuration,
         }
     }
@@ -814,154 +810,6 @@ impl Butler {
         return false;
     }
 
-    /// Start the interaction with the user. This is the main loop for the interactive mode
-    pub fn interact_with_user(&mut self) -> bool {
-        loop {
-            match self.user_interactor.start_user_interaction() {
-                Ok(CliCommand::AddProject) => {
-                    // Get project parameters
-                    let project_name = match self.user_interactor.get_project_name() {
-                        Ok(name) => name,
-                        Err(e) => {
-                            tracing::error!("Failed to get project name: {}", e);
-                            return false;
-                        }
-                    };
-                    tracing::debug!("New project name: {}", project_name);
-
-                    let project_description = match self.user_interactor.get_project_description() {
-                        Ok(desc) => desc,
-                        Err(e) => {
-                            tracing::error!("Failed to get project description: {}", e);
-                            return false;
-                        }
-                    };
-                    tracing::debug!("New project description received");
-
-                    // Add project
-                    if self.add_project(Project::new(project_name, Some(project_description))) {
-                        tracing::info!("Project added successfully!");
-                        return true;
-                    } else {
-                        tracing::info!("Failed to add project!");
-                        return false;
-                    }
-                }
-
-                Ok(CliCommand::AddEntry) => {
-                    if self.number_of_projects() == 0 {
-                        self.user_interactor
-                            .print_msg_to_user("No projects stored, unable to add entry. Please add a new project first.");
-                        return false;
-                    }
-
-                    self.display_stored_projects();
-
-                    let project_name = match self.user_interactor.get_entry_project() {
-                        Ok(name) => name,
-                        Err(e) => {
-                            tracing::error!("Failed to get project name: {}", e);
-                            return false;
-                        }
-                    };
-
-                    let entry_description = match self.user_interactor.get_entry_description() {
-                        Ok(desc) => desc,
-                        Err(e) => {
-                            tracing::error!("Failed to get entry description: {}", e);
-                            return false;
-                        }
-                    };
-
-                    let entry_hours = match self.user_interactor.get_entry_hours() {
-                        Ok(hours) => hours,
-                        Err(e) => {
-                            tracing::error!("Failed to get entry hours: {}", e);
-                            return false;
-                        }
-                    };
-
-                    if self.add_entry(
-                        &project_name,
-                        Entry::new(entry_hours, Some(entry_description)),
-                    ) {
-                        tracing::info!("Entry added successfully!");
-                        return true;
-                    } else {
-                        tracing::info!("Failed to add entry!");
-                        return false;
-                    }
-
-                    // Add interactive logic here
-                }
-                Ok(CliCommand::AddDay) => {
-                    let description = self.user_interactor.get_day_description();
-                    let mut new_day = Day::new(Some(description.unwrap())); // safe since it will contain empty string in worst case
-
-                    if let Ok(true) = self.user_interactor.get_day_starting_time() {
-                        new_day.set_starting_time(Some(&chrono::Local::now()));
-                    }
-
-                    if let Ok(true) = self.user_interactor.get_day_ending_time() {
-                        new_day.set_ending_time(Some(&chrono::Local::now()));
-                    }
-
-                    if self.add_day(new_day) {
-                        tracing::info!("Day added successfully!");
-                        return true;
-                    } else {
-                        tracing::info!("Failed to add day!");
-                        return false;
-                    }
-
-                    // Add interactive logic here
-                }
-                Ok(CliCommand::ListProjects) => {
-                    match self.user_interactor.get_list_projects(&self.projects) {
-                        Ok((true, None)) => {
-                            self.list_all_projects();
-                        }
-                        Ok((false, Some(project_name))) => {
-                            self.list_specific_project(&project_name);
-                        }
-                        Err(e) => {
-                            tracing::error!("An error occurred while listing projects: {}", e);
-                        }
-                        _ => {
-                            tracing::warn!("Unexpected option selected");
-                        }
-                    }
-                    return false;
-                }
-                Ok(CliCommand::ListWeeks) => {
-                    match self.user_interactor.get_list_weeks(&self.weeks) {
-                        Ok((true, None)) => {
-                            self.list_all_weeks();
-                        }
-                        Ok((false, Some(week_number))) => {
-                            self.list_specific_week(week_number);
-                        }
-                        Err(e) => {
-                            tracing::error!("An error occurred while listing weeks: {}", e);
-                        }
-                        _ => {
-                            tracing::warn!("Unexpected option selected");
-                        }
-                    }
-                    return false;
-                }
-                Ok(CliCommand::Exit) => {
-                    tracing::debug!("Exiting...");
-                    return false;
-                }
-                Err(e) => {
-                    tracing::error!("Error: {}", e);
-                    return false;
-                }
-            }
-        }
-    }
-
     pub fn display_week_target_status(&self, week: u32, year: u32) -> bool {
         if self.weeks.is_empty() {
             tracing::warn!("No weeks stored, unable to display weekly target status");
@@ -1135,15 +983,6 @@ impl Butler {
             }
         }
         weeks
-    }
-
-    /// Display current stored projects
-    fn display_stored_projects(&self) {
-        // Display stored projects - mainly for interactive mode
-        for p in &self.projects {
-            println!("Current stored projects: ");
-            println!("- {}", p.name());
-        }
     }
 
     /// Internal function to get the table for printing a day
