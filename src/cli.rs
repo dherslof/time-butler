@@ -35,9 +35,7 @@ pub struct Cli {
 /// Enum to define available subcommands
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Report time interactively
-    Interactive,
-    /// Report time with input arguments
+    /// Add new time items
     Add {
         #[command(subcommand)]
         entity: AddSubcommands,
@@ -47,7 +45,7 @@ pub enum Commands {
         #[command(subcommand)]
         entity: ReportSubcommands,
     },
-    /// List already reported items
+    /// List already reported time items
     List {
         /// Project name
         #[arg(short, long)]
@@ -65,7 +63,7 @@ pub enum Commands {
         #[arg(long, action = clap::ArgAction::SetTrue)]
         all_projects: bool,
     },
-    /// Remove a already store item
+    /// Remove a already stored time item
     Remove {
         /// Project name
         #[command(subcommand)]
@@ -84,7 +82,7 @@ pub enum Commands {
         day: Option<String>,
     },
 
-    /// Short Info regarding internal storage
+    /// Short info regarding internal storage
     Info {
         /// Short summary
         #[arg(long, action = clap::ArgAction::SetTrue)]

@@ -37,28 +37,10 @@ Fully developed in rust for personal use, but it can probably help more people t
 ## Functions
 
 ### Modes
-**TimeButler** can be used in two different ways from the command line, either the default `direct`  or `interactive`.
+**TimeButler** is easy and intuitive to use:
 
 ```bash
-# Interactive
-$ time-butler interactive
-Welcome to the TimeButler's interactive mode!
-Here you will be guided through the functionalities of the program.
-
-More functionalities will be added in the future. Use CLI for full set of features.
-
-Please select an option:
-1. Add a new project
-2. Add a new entry to a project
-3. Add a new work day
-4. List project or projects
-5. List entry or entries for a week
-6. Exit
-
-```
-
-```bash
-# Add new day with starting time through the direct mode
+# Add new day with starting time
 $ time-butler add day --starting-time
 ```
 ### Logging

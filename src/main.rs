@@ -9,7 +9,6 @@
 mod backup_organizer;
 mod butler;
 mod cli;
-mod cli_interactor;
 mod config;
 mod config_reader;
 mod day;
@@ -147,14 +146,6 @@ fn main() {
     butler.init();
 
     match args.command {
-        Commands::Interactive => {
-            tracing::debug!("Starting in interactive mode");
-
-            // True or false depending on if data needs to be stored
-            if butler.interact_with_user() {
-                store_data = true;
-            }
-        }
         Commands::Add { entity } => match entity {
             AddSubcommands::Project { name, description } => {
                 tracing::debug!("Adding new project");
