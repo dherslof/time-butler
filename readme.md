@@ -181,7 +181,7 @@ time-butler add entry --project <my_project> --hours 8 --description "Fixed a bu
 - [X] Read settings (storage path etc) from config file
 - [X] Add Target, with status for stored time containers
 - [X] Verify all the document comments for cli. Make sure they are updated and correct.
-- [ ] Refactor out the butler table functions to a separate file.
+- [X] Refactor out the butler table functions to a separate file.
 - [ ] Implement the *modify* command
 - [X] Add initial pause function to a day, in order to exclude total work hours
 
