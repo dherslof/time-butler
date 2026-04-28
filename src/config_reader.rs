@@ -6,7 +6,6 @@
  * License: MIT
  */
 
-use serde_json;
 use std::fs;
 use std::io::Write;
 use std::path::Path;
