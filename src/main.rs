@@ -57,16 +57,14 @@ fn main() {
                 .with_env_filter(EnvFilter::from_default_env()) // Optional: filter logs based on an environment variable
                 .init();
         }
+    } else if args.verbose {
+        tracing_subscriber::fmt()
+            .with_max_level(Level::DEBUG) // Log messages of `DEBUG` level and higher
+            .init();
     } else {
-        if args.verbose {
-            tracing_subscriber::fmt()
-                .with_max_level(Level::DEBUG) // Log messages of `DEBUG` level and higher
-                .init();
-        } else {
-            tracing_subscriber::fmt()
-                .with_max_level(Level::INFO) // Log messages of `INFO` level and higher
-                .init();
-        }
+        tracing_subscriber::fmt()
+            .with_max_level(Level::INFO) // Log messages of `INFO` level and higher
+            .init();
     }
 
     tracing::debug!("Creating the Butler!");
@@ -97,7 +95,7 @@ fn main() {
 
     let user_specific_home_directory = storage_handler.user_home_directory();
     tracing::debug!("Using configuration file at {}", config_path.as_str());
-    let mut config_reader = config_reader::ConfigReader::new(&config_path.as_str());
+    let mut config_reader = config_reader::ConfigReader::new(config_path.as_str());
 
     // Read config, if fail create the new default one
     let default_path = storage_handler.startup_storage_directory() + "/tb-config.json";
@@ -182,11 +180,11 @@ fn main() {
                 tracing::debug!("Adding new day");
                 let mut d = day::Day::new(extra_info);
 
-                if starting_time == true {
+                if starting_time {
                     d.set_starting_time(Some(&chrono::Local::now()));
                 }
 
-                if ending_time == true {
+                if ending_time {
                     d.set_ending_time(Some(&chrono::Local::now()));
                 }
 
@@ -407,10 +405,8 @@ fn main() {
         },
     }
 
-    if store_data {
-        if !butler.save() {
-            tracing::error!("Failed to save butler data, added entry will not be stored properly");
-            process::exit(K_BUTLER_SAVE_FAILED);
-        }
+    if store_data && !butler.save() {
+        tracing::error!("Failed to save butler data, added entry will not be stored properly");
+        process::exit(K_BUTLER_SAVE_FAILED);
     }
 }
