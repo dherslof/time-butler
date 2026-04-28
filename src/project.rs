@@ -66,9 +66,9 @@ impl Project {
     pub fn remove_listed_entry(&mut self, entry_id: &Uuid) -> bool {
         if self.entry_exists(entry_id) {
             self.entries.retain(|e| e.id() != entry_id);
-            return true;
+            true
         } else {
-            return false;
+            false
         }
     }
 
@@ -79,7 +79,7 @@ impl Project {
                 return true;
             }
         }
-        return false;
+        false
     }
 
     /// Return a copy of an entry
@@ -89,7 +89,7 @@ impl Project {
                 return Some(e.clone());
             }
         }
-        return None;
+        None
     }
 }
 

@@ -95,7 +95,7 @@ impl BackupOrganizer {
             self.save_state()?;
         }
 
-        return Ok(());
+        Ok(())
     }
 
     /// Create the backup directory if it does not exist

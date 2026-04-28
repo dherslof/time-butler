@@ -106,7 +106,7 @@ impl StorageHandler {
             }
         };
 
-        return Some(projects);
+        Some(projects)
     }
 
     /// Store projects to storage
@@ -189,7 +189,7 @@ impl StorageHandler {
             }
         };
 
-        return Some(weeks);
+        Some(weeks)
     }
 
     /// Store weeks to storage
