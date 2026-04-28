@@ -48,7 +48,7 @@ impl Entry {
             None => "",
         };
 
-        return return_value;
+        return_value
     }
 
     /// Getter for `created`

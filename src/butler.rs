@@ -64,10 +64,10 @@ impl Butler {
 
         // Normalize and match the response
         match input.trim().to_lowercase().as_str() {
-            "yes" | "y" => return true,
+            "yes" | "y" => true,
             _ => {
                 tracing::warn!("Not confirmed by user");
-                return false;
+                false
             }
         }
     }
@@ -144,7 +144,7 @@ impl Butler {
         tracing::debug!("Project will be stored with ID: {}", project.id());
         self.projects.push(project);
 
-        return true;
+        true
     }
 
     /// Create a new project report
@@ -186,7 +186,7 @@ impl Butler {
         }
 
         tracing::error!("Project with name {} not found", project_name);
-        return false;
+        false
     }
 
     /// Create a new week report
@@ -233,7 +233,7 @@ impl Butler {
             week_number,
             year
         );
-        return false;
+        false
     }
 
     pub fn month_report(&self, month_number: u32, format: &str, year: u32) -> bool {
@@ -291,7 +291,7 @@ impl Butler {
                 }
             };
 
-        return generation_result;
+        generation_result
     }
 
     /// List all projects
@@ -476,7 +476,7 @@ impl Butler {
             "Project with name {} not found, unable to add entry",
             project_name
         );
-        return false;
+        false
     }
 
     /// Add new day to a week
@@ -567,7 +567,7 @@ impl Butler {
                 }
             }
         }
-        return false;
+        false
     }
 
     /// Save the butler data to storage, in bin format
@@ -602,7 +602,7 @@ impl Butler {
             self.configuration.periodic_backup_interval(),
         );
 
-        return true;
+        true
     }
 
     pub fn force_backup(&self) -> bool {
@@ -610,11 +610,11 @@ impl Butler {
         match self.storage_handler.do_backup_now() {
             Ok(_) => {
                 tracing::info!("Backup completed successfully");
-                return true;
+                true
             }
             Err(e) => {
                 tracing::error!("Backup failed: {}", e);
-                return false;
+                false
             }
         }
     }
@@ -639,14 +639,14 @@ impl Butler {
             )) {
                 self.projects.remove(index);
                 tracing::debug!("Project {}, removed", project_name);
-                return true;
+                true
             } else {
                 tracing::info!("Confirmation not given, aborting");
-                return false;
+                false
             }
         } else {
             tracing::warn!("Project with name {} not found", project_name);
-            return false;
+            false
         }
     }
 
@@ -722,7 +722,7 @@ impl Butler {
             }
         }
         tracing::warn!("Project with name {} not found", project);
-        return false;
+        false
     }
 
     pub fn remove_day(&mut self, week: u32, date: String) -> bool {
@@ -808,7 +808,7 @@ impl Butler {
             week,
             year
         );
-        return false;
+        false
     }
 
     pub fn display_week_target_status(&self, week: u32, year: u32) -> bool {
@@ -846,7 +846,7 @@ impl Butler {
         }
 
         tracing::warn!("Week with number {} not found", week);
-        return false;
+        false
     }
 
     pub fn display_month_target_status(&self, month_number: u32, year: u32) -> bool {
@@ -902,7 +902,7 @@ impl Butler {
         ]);
 
         println!("{}", table);
-        return true;
+        true
     }
 
     pub fn dump_configuration_to_terminal(&self, configuration_file_path: String) {

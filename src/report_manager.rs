@@ -192,7 +192,7 @@ impl ReportManager {
             }
         }
 
-        return Ok(());
+        Ok(())
     }
 
     /// Internal function to write a YAML project report file
@@ -217,7 +217,7 @@ impl ReportManager {
             }
         }
 
-        return Ok(());
+        Ok(())
     }
 
     /// Internal function to write an HTML project report file
@@ -489,7 +489,7 @@ impl ReportManager {
             }
         }
 
-        return Ok(());
+        Ok(())
     }
 
     /// Internal function to write a YAML week report file
@@ -546,7 +546,7 @@ impl ReportManager {
             }
         }
 
-        return Ok(());
+        Ok(())
     }
 
     /// Internal function to write an HTML week report file
@@ -859,7 +859,7 @@ impl ReportManager {
                 unimplemented!(); //TODO: Implement this
             }
         }
-        return Ok(());
+        Ok(())
     }
 
     fn write_yaml_month_report(
@@ -950,7 +950,7 @@ impl ReportManager {
                 unimplemented!(); //TODO: Implement this
             }
         }
-        return Ok(());
+        Ok(())
     }
 
     fn write_html_month_report(

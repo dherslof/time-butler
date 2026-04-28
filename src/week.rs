@@ -70,7 +70,7 @@ impl Week {
                 return true;
             }
         }
-        return false;
+        false
     }
 
     /// Overloaded function. Check if a day exists in the week based on NaiveDate
@@ -80,7 +80,7 @@ impl Week {
                 return true;
             }
         }
-        return false;
+        false
     }
 
     /// Modify data for a specific day in the vector
@@ -108,10 +108,10 @@ impl Week {
                 day.set_extra_info(entry.extra_info().to_string());
             }
 
-            return true;
+            true
         } else {
             // Day not found
-            return false;
+            false
         }
     }
 
@@ -122,16 +122,16 @@ impl Week {
                 return Some(d.clone());
             }
         }
-        return None;
+        None
     }
 
     /// Remove Day from the week
     pub fn remove_listed_day(&mut self, date: &NaiveDate) -> bool {
         if self.exist(date) {
             self.entries.retain(|d| d.date() != *date);
-            return true;
+            true
         } else {
-            return false;
+            false
         }
     }
 }
