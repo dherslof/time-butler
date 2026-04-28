@@ -102,8 +102,6 @@ impl WeeklyTargetStatus {
             TargetStatus::Reached
         } else if percentage > K_100_PERCENT {
             TargetStatus::OverReached
-        } else if percentage < K_100_PERCENT && percentage > 0 {
-            TargetStatus::NotReached
         } else {
             TargetStatus::NotReached
         };
@@ -188,8 +186,6 @@ impl MonthlyTargetStatus {
             TargetStatus::Reached
         } else if percentage > K_100_PERCENT {
             TargetStatus::OverReached
-        } else if percentage < K_100_PERCENT && percentage > 0 {
-            TargetStatus::NotReached
         } else {
             TargetStatus::NotReached
         };
