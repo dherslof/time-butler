@@ -99,14 +99,14 @@ pub fn print_day_in_report_table(day: &Day) {
     };
 
     table.add_row(vec![
-        Cell::new(&day.week().to_string()),
-        Cell::new(&day.date().to_string()),
+        Cell::new(day.week().to_string()),
+        Cell::new(day.date().to_string()),
         Cell::new(start_time),
         Cell::new(end_time),
-        Cell::new(&day.hours_paused().to_string()),
-        Cell::new(&day.hours().to_string()),
-        Cell::new(&day.closed().to_string()),
-        Cell::new(&day.extra_info()),
+        Cell::new(day.hours_paused().to_string()),
+        Cell::new(day.hours().to_string()),
+        Cell::new(day.closed().to_string()),
+        Cell::new(day.extra_info()),
     ]);
 
     println!("{}", table);
@@ -119,9 +119,9 @@ pub fn print_entry_in_report_table(entry: &Entry) {
     table.add_row(vec![
         Cell::new("Project"),
         Cell::new(entry.description()),
-        Cell::new(&entry.hours().to_string()),
-        Cell::new(&entry.created().to_string()),
-        Cell::new(&entry.id().to_string()),
+        Cell::new(entry.hours().to_string()),
+        Cell::new(entry.created().to_string()),
+        Cell::new(entry.id().to_string()),
     ]);
 
     println!("{}", table);
