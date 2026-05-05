@@ -151,7 +151,7 @@ impl ReportManager {
         // Decide how to set up the headers based on the columns provided
         match columns {
             Some(c) => {
-                writer.write_record(&[
+                writer.write_record([
                     c.first.as_str(),
                     c.second.as_str(),
                     c.third.as_str(),
@@ -394,7 +394,7 @@ impl ReportManager {
         // Decide how to set up the headers based on the columns provided
         match columns {
             Some(c) => {
-                writer.write_record(&[
+                writer.write_record([
                     c.first.as_str(),
                     c.second.as_str(),
                     c.third.as_str(),
@@ -457,7 +457,7 @@ impl ReportManager {
                     let json_struct = format!(
                         r#"{{"{}": "{}", "{}": "{}", "{}": "{}", "{}": "{}", "{}": "{}", "{}": "{}"}}"#,
                         c.second,
-                        d.date().to_string(),
+                        d.date(),
                         c.third,
                         formatted_start_time,
                         c.fourth,
@@ -478,7 +478,7 @@ impl ReportManager {
                     r#"{{"{}": "{}", "{}": {}}}"#,
                     c.first,
                     week.number(),
-                    "Days".to_string(),
+                    "Days",
                     days_in_json
                 );
                 report_file.write_all(json_report.as_bytes())?;
@@ -516,7 +516,7 @@ impl ReportManager {
                     let yaml_struct = format!(
                         "\n- {}: \"{}\"\n  {}: \"{}\"\n  {}: \"{}\"\n  {}: \"{}\"\n  {}: \"{}\"\n  {}: \"{}\"\n",
                         c.second,
-                        d.date().to_string(),
+                        d.date(),
                         c.third,
                         formatted_start_time,
                         c.fourth,
@@ -535,7 +535,7 @@ impl ReportManager {
                     "{}: {}\n{}: {}\n",
                     c.first,
                     week.number(),
-                    "Days".to_string(),
+                    "Days",
                     days_in_yaml
                 );
                 report_file.write_all(yaml_report.as_bytes())?;
@@ -759,7 +759,7 @@ impl ReportManager {
         // Decide how to set up the headers based on the columns provided
         match columns {
             Some(c) => {
-                writer.write_record(&[
+                writer.write_record([
                     c.first.as_str(),
                     c.second.as_str(),
                     c.third.as_str(),
@@ -832,10 +832,7 @@ impl ReportManager {
                         &c.eighth: d.closed()
                     });
 
-                    weeks_map
-                        .entry(week_number)
-                        .or_insert_with(Vec::new)
-                        .push(day_json);
+                    weeks_map.entry(week_number).or_default().push(day_json);
                 }
 
                 // Convert the grouped data into a structured JSON
@@ -912,7 +909,7 @@ impl ReportManager {
 
                     weeks_map
                         .entry(week_number)
-                        .or_insert_with(Vec::new)
+                        .or_default()
                         .push(serde_yaml::Value::Mapping(day_yaml));
                 }
 
@@ -987,10 +984,7 @@ impl ReportManager {
                         d.closed().to_string(),
                     ];
 
-                    weeks_map
-                        .entry(week_number)
-                        .or_insert_with(Vec::new)
-                        .push(row);
+                    weeks_map.entry(week_number).or_default().push(row);
                 }
 
                 // Build the HTML markup
