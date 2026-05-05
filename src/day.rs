@@ -73,7 +73,7 @@ impl Day {
         self.extra_info = info;
     }
 
-    /// Getter for `created`
+    // /// Getter for `created`
     /* Unused, remove comment or remove function if not needed later
         pub fn created(&self) -> &DateTime<Local> {
             &self.created

@@ -173,7 +173,7 @@ impl Butler {
                 }
 
                 let generation_result =
-                    match self.report_mngr.generate_project_report(report_format, &p) {
+                    match self.report_mngr.generate_project_report(report_format, p) {
                         Ok(_) => true,
                         Err(e) => {
                             tracing::error!("failed to generate report: {}", e);
@@ -216,7 +216,7 @@ impl Butler {
                 }
 
                 let generation_result =
-                    match self.report_mngr.generate_week_report(report_format, &w) {
+                    match self.report_mngr.generate_week_report(report_format, w) {
                         Ok(_) => true,
                         Err(e) => {
                             tracing::error!("failed to generate report: {}", e);
@@ -250,7 +250,7 @@ impl Butler {
             }
         };
 
-        if month_number < 1 || month_number > 12 {
+        if !(1..=12).contains(&month_number) {
             tracing::error!("Invalid month number: {}", month_number);
             return false;
         }
@@ -310,8 +310,8 @@ impl Butler {
             table.add_row(vec![
                 Cell::new(p.name()),
                 Cell::new(p.description().unwrap_or("")),
-                Cell::new(&p.entries().len().to_string()),
-                Cell::new(&p.id().to_string()),
+                Cell::new(p.entries().len().to_string()),
+                Cell::new(p.id().to_string()),
             ]);
         }
 
@@ -328,9 +328,9 @@ impl Butler {
                     table.add_row(vec![
                         Cell::new(p.name()),
                         Cell::new(e.description()),
-                        Cell::new(&e.hours().to_string()),
-                        Cell::new(&e.created().to_string()),
-                        Cell::new(&e.id().to_string()),
+                        Cell::new(e.hours().to_string()),
+                        Cell::new(e.created().to_string()),
+                        Cell::new(e.id().to_string()),
                     ]);
                 }
 
@@ -355,9 +355,9 @@ impl Butler {
 
         for w in &self.weeks {
             table.add_row(vec![
-                Cell::new(&w.year().to_string()),
-                Cell::new(&w.number().to_string()),
-                Cell::new(&w.entries().len().to_string()),
+                Cell::new(w.year().to_string()),
+                Cell::new(w.number().to_string()),
+                Cell::new(w.entries().len().to_string()),
             ]);
         }
 
@@ -395,13 +395,13 @@ impl Butler {
                 };
 
                 table.add_row(vec![
-                    Cell::new(&d.week().to_string()),
-                    Cell::new(&d.date().to_string()),
+                    Cell::new(d.week().to_string()),
+                    Cell::new(d.date().to_string()),
                     Cell::new(start_time),
                     Cell::new(end_time),
-                    Cell::new(&d.hours().to_string()),
-                    Cell::new(&d.closed().to_string()),
-                    Cell::new(&d.extra_info()),
+                    Cell::new(d.hours().to_string()),
+                    Cell::new(d.closed().to_string()),
+                    Cell::new(d.extra_info()),
                 ]);
             }
 
@@ -410,7 +410,7 @@ impl Butler {
     }
 
     pub fn list_specific_month(&self, month_number: u32) {
-        if month_number < 1 || month_number > 12 {
+        if !(1..=12).contains(&month_number) {
             tracing::error!("Invalid month number: {}", month_number);
             return;
         }
@@ -443,13 +443,13 @@ impl Butler {
                 };
 
                 table.add_row(vec![
-                    Cell::new(&d.week().to_string()),
-                    Cell::new(&d.date().to_string()),
+                    Cell::new(d.week().to_string()),
+                    Cell::new(d.date().to_string()),
                     Cell::new(start_time),
                     Cell::new(end_time),
-                    Cell::new(&d.hours().to_string()),
-                    Cell::new(&d.closed().to_string()),
-                    Cell::new(&d.extra_info()),
+                    Cell::new(d.hours().to_string()),
+                    Cell::new(d.closed().to_string()),
+                    Cell::new(d.extra_info()),
                 ]);
             }
 
@@ -702,7 +702,7 @@ impl Butler {
 
                 if Self::prompt_user_confirmation(&format!(
                     "Are you sure you want to remove entry {}",
-                    parsed_id.to_string()
+                    parsed_id
                 )) {
                     if p.remove_listed_entry(&parsed_id) {
                         tracing::info!(
@@ -763,8 +763,8 @@ impl Butler {
                 let mut table = tables::get_table_day();
 
                 table.add_row(vec![
-                    Cell::new(&day_cpy.week().to_string()),
-                    Cell::new(&day_cpy.date().to_string()),
+                    Cell::new(day_cpy.week().to_string()),
+                    Cell::new(day_cpy.date().to_string()),
                     Cell::new(
                         day_cpy
                             .starting_time()
@@ -777,9 +777,9 @@ impl Butler {
                             .map(|dt| dt.to_string())
                             .unwrap_or_else(|| "N/A".to_string()),
                     ),
-                    Cell::new(&day_cpy.hours().to_string()),
-                    Cell::new(&day_cpy.closed().to_string()),
-                    Cell::new(&day_cpy.extra_info()),
+                    Cell::new(day_cpy.hours().to_string()),
+                    Cell::new(day_cpy.closed().to_string()),
+                    Cell::new(day_cpy.extra_info()),
                 ]);
                 println!("{}", table);
                 if Self::prompt_user_confirmation(&format!(
@@ -819,7 +819,7 @@ impl Butler {
 
         for w in &self.weeks {
             if w.number() == week && w.year() as u32 == year {
-                let status = WeeklyTargetStatus::new(&w, &w.target_hours());
+                let status = WeeklyTargetStatus::new(w, &w.target_hours());
                 let mut table = tables::get_table_target_week();
                 table.add_row(vec![
                     Cell::new(week),
@@ -850,7 +850,7 @@ impl Butler {
     }
 
     pub fn display_month_target_status(&self, month_number: u32, year: u32) -> bool {
-        if month_number < 1 || month_number > 12 {
+        if !(1..=12).contains(&month_number) {
             tracing::error!("Invalid month number: {}", month_number);
             return false;
         }

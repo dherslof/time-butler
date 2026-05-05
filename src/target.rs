@@ -107,7 +107,7 @@ impl WeeklyTargetStatus {
         };
 
         Self {
-            target_hours: target_hours,
+            target_hours,
             status_hours,
             hours_difference,
             percentage,
@@ -191,7 +191,7 @@ impl MonthlyTargetStatus {
         };
 
         Self {
-            target_hours: target_hours,
+            target_hours,
             status_hours,
             hours_difference,
             percentage,

@@ -177,7 +177,7 @@ time-butler add entry --project <my_project> --hours 8 --description "Fixed a bu
 - [X] Basic github actions pipeline setup
 - [X] Improve the hour calculation in Day, to take minutes in to account
 - [ ] Update project hours type to float. Will brake existing serializing for current users.
-- [ ] Fix all `clippy` warnings
+- [X] Fix all `clippy` warnings
 - [X] Read settings (storage path etc) from config file
 - [X] Add Target, with status for stored time containers
 - [X] Verify all the document comments for cli. Make sure they are updated and correct.
