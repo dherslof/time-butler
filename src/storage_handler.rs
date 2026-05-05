@@ -73,7 +73,7 @@ impl StorageHandler {
 
     /// Load projects from storage
     pub fn load_projects(&self) -> Option<Vec<Project>> {
-        if self.init_success == false {
+        if !self.init_success {
             tracing::error!("Storage handler not initialized correctly, unable to load projects");
             return None;
         }
@@ -83,7 +83,7 @@ impl StorageHandler {
             self.project_data_file_path
         );
         let prj_file = self.project_data_file_path.clone();
-        if !fs::metadata(&prj_file).is_ok() {
+        if fs::metadata(&prj_file).is_err() {
             tracing::error!(
                 "File {} does not exist - OK if running for first time or no projects stored",
                 prj_file
@@ -92,7 +92,7 @@ impl StorageHandler {
         }
 
         let mut file = fs::File::open(prj_file)
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Error opening file: {}", e)))
+            .map_err(|e| io::Error::other(format!("Error opening file: {}", e)))
             .ok()?;
 
         let mut buffer = Vec::new();
@@ -111,10 +111,9 @@ impl StorageHandler {
 
     /// Store projects to storage
     pub fn store_projects(&self, projects: Vec<Project>) -> io::Result<()> {
-        if self.init_success == false {
+        if !self.init_success {
             tracing::error!("Storage handler not initialized correctly, unable to store projects");
-            return Err(io::Error::new(
-                io::ErrorKind::Other,
+            return Err(io::Error::other(
                 "Storage handler not initialized correctly",
             ));
         }
@@ -122,9 +121,8 @@ impl StorageHandler {
         let prj_file = self.project_data_file_path.clone();
         tracing::debug!("Storing projects to file: {}", prj_file);
 
-        let serialized_data = bincode::serialize(&projects).map_err(|e| {
-            io::Error::new(io::ErrorKind::Other, format!("Serialization error: {}", e))
-        })?;
+        let serialized_data = bincode::serialize(&projects)
+            .map_err(|e| io::Error::other(format!("Serialization error: {}", e)))?;
         let mut file = fs::File::create(prj_file)?;
         file.write_all(&serialized_data)?;
 
@@ -160,13 +158,13 @@ impl StorageHandler {
 
     /// Load weeks from storage
     pub fn load_weeks(&self) -> Option<Vec<Week>> {
-        if self.init_success == false {
+        if !self.init_success {
             tracing::error!("Storage handler not initialized correctly, unable to load weeks");
             return None;
         }
         let week_file = self.week_data_file_path.clone();
         tracing::debug!("Loading weeks from file: {}", week_file);
-        if !fs::metadata(&week_file).is_ok() {
+        if fs::metadata(&week_file).is_err() {
             tracing::error!(
                 "File {} does not exist - OK if running for first time or no weeks stored",
                 week_file
@@ -175,7 +173,7 @@ impl StorageHandler {
         }
 
         let mut file = fs::File::open(week_file)
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Error opening file: {}", e)))
+            .map_err(|e| io::Error::other(format!("Error opening file: {}", e)))
             .ok()?;
 
         let mut buffer = Vec::new();
@@ -194,15 +192,14 @@ impl StorageHandler {
 
     /// Store weeks to storage
     pub fn store_weeks(&self, weeks: Vec<Week>) -> io::Result<()> {
-        if self.init_success == false {
+        if !self.init_success {
             tracing::error!("Storage handler not initialized correctly, unable to store weeks");
-            return Err(io::Error::new(
-                io::ErrorKind::Other,
+            return Err(io::Error::other(
                 "Storage handler not initialized correctly",
             ));
         }
         let storage_dir = self.storage_dir.clone();
-        if !fs::metadata(&storage_dir).is_ok() {
+        if fs::metadata(&storage_dir).is_err() {
             tracing::debug!("Storage directory does not exist, creating it");
             self.create_storage_dir()?;
         }
@@ -211,7 +208,8 @@ impl StorageHandler {
         tracing::debug!("Storing projects to file: {}", week_file);
 
         let serialized_data = bincode::serialize(&weeks).map_err(|e| {
-            io::Error::new(io::ErrorKind::Other, format!("Serialization error: {}", e))
+            //io::Error::new(io::ErrorKind::Other, format!("Serialization error: {}", e))
+            io::Error::other(format!("Serialization error: {}", e))
         })?;
         let mut file = fs::File::create(week_file)?;
         file.write_all(&serialized_data)?;
@@ -245,7 +243,7 @@ impl StorageHandler {
             self.storage_dir = format!("{}/{}/{}", home_dir.display(), BASE_PATH, self.storage_dir);
 
             // Check if this is the first run
-            if !fs::metadata(&self.storage_dir).is_ok() {
+            if fs::metadata(&self.storage_dir).is_err() {
                 tracing::info!("First run detected, creating storage directory");
                 self.first_run = true;
             } else {
