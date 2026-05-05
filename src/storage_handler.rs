@@ -12,8 +12,6 @@ use std::io::Read;
 use std::io::Write;
 use std::path::Path;
 
-use bincode;
-
 use crate::backup_organizer::BackupOrganizer;
 use crate::config::AppConfiguration;
 use crate::project::Project;
