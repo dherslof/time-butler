@@ -47,7 +47,7 @@ impl Day {
             starting_time: None,
             ending_time: None,
             hours: K_NO_HOURS,
-            extra_info: extra_info.unwrap_or_else(|| "".to_string()),
+            extra_info: extra_info.unwrap_or_default(),
             created: Local::now(),
             week: Utc::now().iso_week().week(),
             date: Local::now().date_naive(),
@@ -98,7 +98,7 @@ impl Day {
     /// Setter for `starting_time`
     pub fn set_starting_time(&mut self, t: Option<&DateTime<Local>>) {
         match t {
-            Some(value) => self.starting_time = Some(value.clone()),
+            Some(value) => self.starting_time = Some(*value),
             None => {
                 self.starting_time = Some(Local::now());
                 tracing::debug!("No starting time provided, setting current time");
@@ -125,7 +125,7 @@ impl Day {
     /// Setter for `ending_time`
     pub fn set_ending_time(&mut self, t: Option<&DateTime<Local>>) {
         match t {
-            Some(value) => self.ending_time = Some(value.clone()),
+            Some(value) => self.ending_time = Some(*value),
             None => {
                 self.ending_time = Some(Local::now());
                 tracing::debug!("No ending time provided, setting current time");

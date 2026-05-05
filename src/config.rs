@@ -34,7 +34,7 @@ impl AppConfiguration {
     }
 
     pub fn week_target_hours(&self) -> f32 {
-        self.targets.week_target_hours.clone()
+        self.targets.week_target_hours
     }
 
     pub fn backup_directory(&self) -> String {
@@ -42,23 +42,23 @@ impl AppConfiguration {
     }
 
     pub fn month_target_hours(&self) -> f32 {
-        self.targets.month_target_hours.clone()
+        self.targets.month_target_hours
     }
 
     pub fn weekly_target_for_month(&self) -> bool {
-        self.targets.weekly_target_for_month.clone()
+        self.targets.weekly_target_for_month
     }
 
     pub fn periodic_backup_enabled(&self) -> bool {
-        self.backup.enable_periodic_backup.clone()
+        self.backup.enable_periodic_backup
     }
 
     pub fn periodic_backup_interval(&self) -> u32 {
-        self.backup.periodic_backup_interval_days.clone()
+        self.backup.periodic_backup_interval_days
     }
 
     pub fn override_existing_backup(&self) -> bool {
-        self.backup.override_existing_backup.clone()
+        self.backup.override_existing_backup
     }
 
     pub fn get_as_string(&self) -> String {
