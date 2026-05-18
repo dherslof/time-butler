@@ -129,7 +129,7 @@ pub enum AddSubcommands {
         project: String,
         /// Hours worked
         #[arg(long)]
-        hours: u32,
+        hours: Option<String>,
         /// Description of the work done
         #[arg(long)]
         description: String,

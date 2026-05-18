@@ -15,7 +15,7 @@ use uuid::Uuid;
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Entry {
     /// Hours logged
-    hours: u32,
+    hours: f32,
     /// Description of the work done
     description: Option<String>,
     /// Timestamp of when the entry was created
@@ -27,7 +27,7 @@ pub struct Entry {
 /// Implementation for Entry functionality
 impl Entry {
     /// Create a new Entry
-    pub fn new(hours: u32, description: Option<String>) -> Self {
+    pub fn new(hours: f32, description: Option<String>) -> Self {
         Self {
             hours,
             description,
@@ -37,7 +37,7 @@ impl Entry {
     }
 
     /// Getter for `hours`
-    pub fn hours(&self) -> u32 {
+    pub fn hours(&self) -> f32 {
         self.hours
     }
 

@@ -113,11 +113,11 @@ pub fn print_day_in_report_table(day: &Day) {
 }
 
 // Internal function to print a single entry, in report table format
-pub fn print_entry_in_report_table(entry: &Entry) {
+pub fn print_entry_in_report_table(entry: &Entry, project_name: &str) {
     let mut table = get_table_entry();
 
     table.add_row(vec![
-        Cell::new("Project"),
+        Cell::new(project_name),
         Cell::new(entry.description()),
         Cell::new(entry.hours().to_string()),
         Cell::new(entry.created().to_string()),
