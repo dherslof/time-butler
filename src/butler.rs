@@ -467,7 +467,7 @@ impl Butler {
                 p.add_entry(entry);
 
                 // Print new entry as confirmation to user
-                tables::print_entry_in_report_table(&entry_clone);
+                tables::print_entry_in_report_table(&entry_clone, p.name());
                 return true;
             }
         }

@@ -163,7 +163,16 @@ fn main() {
                 description,
             } => {
                 tracing::debug!("Adding new entry");
-                let e = entry::Entry::new(hours, Some(description));
+                let hours_f32 = match hours {
+                    Some(ref s) => s.parse::<f32>().unwrap_or(0.0),
+                    None => 0.0,
+                };
+
+                if hours_f32 <= 0.0 {
+                    tracing::error!("Invalid hours provided: {} [{} parsed value]. You can't report 0 or negative hours on a project.", hours.unwrap(), hours_f32);
+                }
+
+                let e = entry::Entry::new(hours_f32, Some(description));
                 if butler.add_entry(&project, e) {
                     tracing::info!("Entry added successfully!");
                     store_data = true;
