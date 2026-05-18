@@ -104,6 +104,11 @@ impl Butler {
             tracing::error!("Failed to load weeks from storage");
         }
         tracing::debug!("Loaded {} weeks", self.weeks.len());
+
+        self.report_mngr
+            .set_report_storage_dir(self.configuration.report_directory().to_string());
+
+        tracing::debug!("Initialization complete!");
     }
 
     /// Display information about the Butler

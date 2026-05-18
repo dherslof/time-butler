@@ -33,7 +33,7 @@ use crate::report::WeekReportColumns;
 /// Report manager to handle report generation and storage
 pub struct ReportManager {
     /// Path to the report storage directory
-    default_report_dir: String,
+    report_dir: String,
     /// Default report file name
     default_report_file_name: String,
 }
@@ -42,7 +42,7 @@ pub struct ReportManager {
 impl ReportManager {
     pub fn new() -> Self {
         Self {
-            default_report_dir: format!(
+            report_dir: format!(
                 "{}/.local/time-butler/generated-reports",
                 std::env::var("HOME").unwrap_or_else(|_| ".".to_string())
             ),
@@ -52,6 +52,15 @@ impl ReportManager {
             )
             .to_string(),
         }
+    }
+
+    pub fn set_report_storage_dir(&mut self, dir: String) {
+        tracing::debug!(
+            "Setting report storage directory to: {}, instead of default: {}",
+            dir,
+            self.report_dir
+        );
+        self.report_dir = dir;
     }
 
     //TODO: add extra parameter here deciding if it should be summary or regular report
@@ -73,7 +82,7 @@ impl ReportManager {
             self.default_report_file_name,
             report_suffix
         );
-        let file_path = format!("{}/{}", self.default_report_dir, file_name);
+        let file_path = format!("{}/{}", self.report_dir, file_name);
         tracing::debug!("report file set to: {}", file_path);
 
         match format {
@@ -312,7 +321,7 @@ impl ReportManager {
             self.default_report_file_name,
             report_suffix
         );
-        let file_path = format!("{}/{}", self.default_report_dir, file_name);
+        let file_path = format!("{}/{}", self.report_dir, file_name);
         tracing::debug!("report file set to: {}", file_path);
 
         let columns = WeekReportColumns {
@@ -665,7 +674,7 @@ impl ReportManager {
             month_number, self.default_report_file_name, report_suffix
         );
 
-        let file_path = format!("{}/{}", self.default_report_dir, file_name);
+        let file_path = format!("{}/{}", self.report_dir, file_name);
         tracing::debug!("report file set to: {}", file_path);
 
         // Same as for week report

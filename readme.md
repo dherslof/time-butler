@@ -176,7 +176,7 @@ time-butler add entry --project <my_project> --hours 8 --description "Fixed a bu
 - [ ] Basic tests
 - [X] Basic github actions pipeline setup
 - [X] Improve the hour calculation in Day, to take minutes in to account
-- [ ] Update project hours type to float. Will brake existing serializing for current users.
+- [X] Update project hours type to float. Will brake existing serializing for current users.
 - [X] Fix all `clippy` warnings
 - [X] Read settings (storage path etc) from config file
 - [X] Add Target, with status for stored time containers
@@ -184,6 +184,7 @@ time-butler add entry --project <my_project> --hours 8 --description "Fixed a bu
 - [X] Refactor out the butler table functions to a separate file.
 - [ ] Implement the *modify* command
 - [X] Add initial pause function to a day, in order to exclude total work hours
+- [ ] Implement storage file version check in order to safe-guard reported time from being overwritten or corrupted.
 
 **Version 1.1.0**
 - [ ] Full Implement the *info* command.
