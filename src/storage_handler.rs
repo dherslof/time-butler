@@ -218,7 +218,7 @@ impl StorageHandler {
     fn init(&mut self) {
         tracing::debug!("Initializing storage handler");
         if cfg!(not(target_os = "linux")) {
-            tracing::error!("Time-butler is only supported on Linux");
+            tracing::warn!("Non Linux OS detected. Time-butler is developed on and for Linux. Other OSes are not maintained at the same level. You may encounter unknown issues.");
         }
 
         // Todo: Check if a configuration file exists, if not set default paths
