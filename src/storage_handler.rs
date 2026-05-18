@@ -20,10 +20,10 @@ use crate::week::Week;
 // Constants for base paths
 const BASE_PATH: &str = ".local/time-butler";
 const STORAGE_DIR: &str = ".app_storage";
-const REPORT_DIR: &str = ".generated_reports";
+const REPORT_DIR: &str = "generated-reports";
 const PROJECT_DATA_FILE: &str = "prj_data.bin";
 const WEEK_DATA_FILE: &str = "week_data.bin";
-const BACKUP_DIR: &str = "backups";
+const BACKUP_DIR: &str = ".backups";
 
 /// The storage handler struct
 pub struct StorageHandler {

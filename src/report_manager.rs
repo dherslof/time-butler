@@ -43,7 +43,7 @@ impl ReportManager {
     pub fn new() -> Self {
         Self {
             default_report_dir: format!(
-                "{}/.local/time-butler/.generated_reports",
+                "{}/.local/time-butler/generated-reports",
                 std::env::var("HOME").unwrap_or_else(|_| ".".to_string())
             ),
             default_report_file_name: format!(
@@ -320,9 +320,10 @@ impl ReportManager {
             second: "Date".to_string(),
             third: "StartingTime".to_string(),
             fourth: "EndingTime".to_string(),
-            fifth: "Hours".to_string(),
-            sixth: "Description".to_string(),
-            seventh: "Closed".to_string(),
+            fifth: "Paused-Hours".to_string(),
+            sixth: "Hours".to_string(),
+            seventh: "Description".to_string(),
+            eighth: "Closed".to_string(),
         };
 
         match format {
@@ -402,6 +403,7 @@ impl ReportManager {
                     c.fifth.as_str(),
                     c.sixth.as_str(),
                     c.seventh.as_str(),
+                    c.eighth.as_str(),
                 ])?;
 
                 for d in week.entries() {
@@ -415,6 +417,7 @@ impl ReportManager {
                         d.date().to_string(),
                         formatted_start_time,
                         formatted_end_time,
+                        d.hours_paused().to_string(),
                         d.hours().to_string(),
                         d.extra_info().to_string(),
                         d.closed().to_string(),
@@ -455,7 +458,7 @@ impl ReportManager {
                     let formatted_end_time = self.format_datetime_to_report_string(d.ending_time());
 
                     let json_struct = format!(
-                        r#"{{"{}": "{}", "{}": "{}", "{}": "{}", "{}": "{}", "{}": "{}", "{}": "{}"}}"#,
+                        r#"{{"{}": "{}", "{}": "{}", "{}": "{}", "{}": "{}", "{}": "{}", "{}": "{}", "{}": "{}"}}"#,
                         c.second,
                         d.date(),
                         c.third,
@@ -463,10 +466,12 @@ impl ReportManager {
                         c.fourth,
                         formatted_end_time,
                         c.fifth,
-                        d.hours(),
+                        d.hours_paused(),
                         c.sixth,
-                        d.extra_info(),
+                        d.hours(),
                         c.seventh,
+                        d.extra_info(),
+                        c.eighth,
                         d.closed(),
                     );
 
@@ -514,7 +519,7 @@ impl ReportManager {
                     let formatted_end_time = self.format_datetime_to_report_string(d.ending_time());
 
                     let yaml_struct = format!(
-                        "\n- {}: \"{}\"\n  {}: \"{}\"\n  {}: \"{}\"\n  {}: \"{}\"\n  {}: \"{}\"\n  {}: \"{}\"\n",
+                        "\n- {}: \"{}\"\n  {}: \"{}\"\n  {}: \"{}\"\n  {}: \"{}\"\n  {}: \"{}\"\n  {}: \"{}\"\n  {}: \"{}\"\n",
                         c.second,
                         d.date(),
                         c.third,
@@ -522,10 +527,12 @@ impl ReportManager {
                         c.fourth,
                         formatted_end_time,
                         c.fifth,
-                        d.hours(),
+                        d.hours_paused(),
                         c.sixth,
-                        d.extra_info(),
+                        d.hours(),
                         c.seventh,
+                        d.extra_info(),
+                        c.eighth,
                         d.closed(),
                     );
                     days_in_yaml.push_str(&yaml_struct);
@@ -570,9 +577,10 @@ impl ReportManager {
                     second: "Date".to_string(),
                     third: "StartingTime".to_string(),
                     fourth: "EndingTime".to_string(),
-                    fifth: "Hours".to_string(),
-                    sixth: "Description".to_string(),
-                    seventh: "Closed".to_string(),
+                    fifth: "Paused-Hours".to_string(),
+                    sixth: "Hours".to_string(),
+                    seventh: "Description".to_string(),
+                    eighth: "Closed".to_string(),
                 }
             }
         };
@@ -585,6 +593,7 @@ impl ReportManager {
             report_columns.fifth,
             report_columns.sixth,
             report_columns.seventh,
+            report_columns.eighth,
         ];
 
         // Rows from the project entries
@@ -597,6 +606,7 @@ impl ReportManager {
                     entry.date().to_string(),
                     self.format_datetime_to_report_string(entry.starting_time()),
                     self.format_datetime_to_report_string(entry.ending_time()),
+                    entry.hours_paused().to_string(),
                     entry.hours().to_string(),
                     entry.extra_info().to_string(),
                     entry.closed().to_string(),

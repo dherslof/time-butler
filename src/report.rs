@@ -87,6 +87,7 @@ pub struct WeekReportColumns {
     pub fifth: String,
     pub sixth: String,
     pub seventh: String,
+    pub eighth: String,
 }
 
 #[derive(Debug)]
