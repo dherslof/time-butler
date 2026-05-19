@@ -14,6 +14,7 @@ pub struct AppConfiguration {
     file_paths: FilePathsConfig,
     targets: TargetsConfig,
     backup: BackupConfig,
+    version: VersionConfiguration,
 }
 
 impl AppConfiguration {
@@ -59,6 +60,10 @@ impl AppConfiguration {
 
     pub fn override_existing_backup(&self) -> bool {
         self.backup.override_existing_backup
+    }
+
+    pub fn always_force_halt_on_version_incompatibility(&self) -> bool {
+        self.version.always_force_halt_on_version_incompatibility
     }
 
     pub fn get_as_string(&self) -> String {
@@ -109,6 +114,10 @@ impl AppConfiguration {
             "  periodic-backup-override: {}\n",
             self.backup.override_existing_backup
         ));
+        out.push_str(&format!(
+            "  always-force-halt-on-version-incompatibility: {}\n",
+            self.version.always_force_halt_on_version_incompatibility
+        ));
         out
     }
 }
@@ -126,7 +135,7 @@ impl AppConfiguration {
                 "{}/.local/time-butler/.app_storage/week_data.bin",
                 user_home
             ),
-            report_directory: format!("{}/.local/time-butler/generated_reports", user_home),
+            report_directory: format!("{}/.local/time-butler/generated-reports", user_home),
             backups_directory: format!("{}/.local/time-butler/backups", user_home),
         };
         let targets = TargetsConfig {
@@ -139,10 +148,14 @@ impl AppConfiguration {
             periodic_backup_interval_days: 14,
             override_existing_backup: true,
         };
+        let version = VersionConfiguration {
+            always_force_halt_on_version_incompatibility: true,
+        };
         Self {
             file_paths,
             targets,
             backup,
+            version,
         }
     }
 }
@@ -187,4 +200,12 @@ pub struct BackupConfig {
     /// Target hours for the week
     #[serde(rename = "periodic-backup-override")]
     pub override_existing_backup: bool,
+}
+
+/// Version configuration struct
+#[derive(Serialize, Deserialize, Clone)]
+pub struct VersionConfiguration {
+    /// Force halt on version incompatibility
+    #[serde(rename = "always-force-halt-on-version-incompatibility")]
+    pub always_force_halt_on_version_incompatibility: bool,
 }

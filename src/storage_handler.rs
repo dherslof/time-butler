@@ -12,9 +12,12 @@ use std::io::Read;
 use std::io::Write;
 use std::path::Path;
 
+use serde::{Deserialize, Serialize};
+
 use crate::backup_organizer::BackupOrganizer;
 use crate::config::AppConfiguration;
 use crate::project::Project;
+use crate::version_info::FileStorageMetadata;
 use crate::week::Week;
 
 // Constants for base paths
@@ -24,6 +27,13 @@ const REPORT_DIR: &str = "generated-reports";
 const PROJECT_DATA_FILE: &str = "prj_data.bin";
 const WEEK_DATA_FILE: &str = "week_data.bin";
 const BACKUP_DIR: &str = ".backups";
+const STORAGE_METADATA_FILE: &str = "metadata.json";
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct VersionInformationWrapper {
+    #[serde(rename = "VersionInformation")]
+    version_information: FileStorageMetadata,
+}
 
 /// The storage handler struct
 pub struct StorageHandler {
@@ -325,5 +335,55 @@ impl StorageHandler {
             backup_duration_interval,
             Some(false),
         )
+    }
+
+    pub fn load_metadata(&self) -> Option<FileStorageMetadata> {
+        let metadata_file = format!(
+            "{}/{}/{}",
+            self.storage_dir, STORAGE_DIR, STORAGE_METADATA_FILE
+        );
+        tracing::debug!("Loading storage metadata from file: {}", metadata_file);
+        if fs::metadata(&metadata_file).is_err() {
+            tracing::error!(
+                "File {} does not exist - OK if running for first time or no metadata stored",
+                metadata_file
+            );
+            return None;
+        }
+
+        let mut file = fs::File::open(metadata_file)
+            .map_err(|e| io::Error::other(format!("Error opening file: {}", e)))
+            .ok()?;
+
+        let mut json = String::new();
+        file.read_to_string(&mut json).ok()?;
+
+        let metadata_wrapper: VersionInformationWrapper = match serde_json::from_str(&json) {
+            Ok(metadata) => metadata,
+            Err(e) => {
+                tracing::error!("Error deserializing metadata json: {}", e);
+                return None;
+            }
+        };
+
+        Some(metadata_wrapper.version_information)
+    }
+
+    pub fn write_metadata(
+        &self,
+        metadata: &FileStorageMetadata,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let metadata_wrapper = VersionInformationWrapper {
+            version_information: metadata.clone(),
+        };
+        let json = serde_json::to_string_pretty(&metadata_wrapper)?;
+        let path_str = format!(
+            "{}/{}/{}",
+            self.storage_dir, STORAGE_DIR, STORAGE_METADATA_FILE
+        );
+        let path = Path::new(&path_str);
+        let mut file = fs::File::create(path)?;
+        file.write_all(json.as_bytes())?;
+        Ok(())
     }
 }

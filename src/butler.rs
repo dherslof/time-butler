@@ -21,6 +21,8 @@ use crate::report_manager::ReportManager;
 use crate::storage_handler::StorageHandler;
 use crate::tables;
 use crate::target::{MonthlyTargetStatus, WeeklyTargetStatus};
+use crate::version_info;
+use crate::version_manager::{VersionCompatibility, VersionManager};
 use crate::week::Week;
 
 /// Butler struct - Main star of the show
@@ -35,6 +37,8 @@ pub struct Butler {
     storage_handler: StorageHandler,
     /// Configuration
     configuration: AppConfiguration,
+    // Version information
+    version_mgnr: VersionManager,
 }
 
 /// Implementation of the functionality for the Butler
@@ -47,10 +51,11 @@ impl Butler {
             report_mngr: ReportManager::new(),
             storage_handler,
             configuration,
+            version_mgnr: VersionManager::new(version_info::VersionInfo::new()),
         }
     }
 
-    /// Internal function for prompting user for confirmation. Used in interactive mode
+    /// Internal function for prompting user for confirmation.
     fn prompt_user_confirmation(question: &str) -> bool {
         let promt = format!("{} [y/N]: ", question);
         print!("{}", promt);
@@ -89,6 +94,76 @@ impl Butler {
         // Update the file paths based on configuratoin
         self.storage_handler
             .set_paths_from_config(&self.configuration);
+
+        self.version_mgnr
+            .set_loaded_storage_metadata(self.storage_handler.load_metadata());
+
+        let storage_compatibility = self.version_mgnr.is_compatible();
+        tracing::debug!(
+            "Butler versions: app version: {}, storage file version: {}",
+            self.version_mgnr.get_version().get_app_version(),
+            self.version_mgnr.get_version().get_storage_file_version()
+        );
+
+        // Check storage compatibility and decide how to proceed based on configuration and user confirmation.
+        // The loading of files don't do so much if failed, but we can fail fast instead of waiting to the writing part.
+
+        match storage_compatibility {
+            VersionCompatibility::Compatible => {
+                tracing::debug!(
+                    "Storage file version is compatible with current application version"
+                );
+            }
+            VersionCompatibility::Incompatible(msg) => {
+                tracing::error!(
+                    "Storage file version is incompatible with current application version: {}",
+                    msg
+                );
+
+                if self
+                    .configuration
+                    .always_force_halt_on_version_incompatibility()
+                {
+                    tracing::info!("Configuration is set to always force halt on version incompatibility, aborting initialization to prevent potential data loss or corruption");
+                    return;
+                }
+
+                // Ask confirmation to user
+                if !Self::prompt_user_confirmation("Storage file version is incompatible with current application version. Do you want to proceed? This may lead to data loss or corruption if the incompatibility is due to breaking changes in the storage file format.") {
+                     tracing::info!("User chose not to proceed, aborting initialization to prevent potential data loss or corruption");
+                  return;
+                  } else {
+                    tracing::warn!("User chose to proceed despite version incompatibility. Forcing a backup of storage as a precautionary measure before continuing.");
+                    self.version_mgnr.set_override_on_incompatibility(true);
+                     match self.storage_handler.do_backup_now() {
+                           Ok(_) => tracing::info!("Backup completed successfully"),
+                           Err(e) => tracing::error!("Backup failed: {}", e),
+                     }
+                  }
+                tracing::warn!("Proceeding with initialization despite version incompatibility.");
+            }
+            VersionCompatibility::Unknown => {
+                tracing::warn!(
+                    "Storage file version compatibility is unknown, no metadata loaded."
+                );
+                let metadata_write_res = match self
+                    .storage_handler
+                    .write_metadata(&self.version_mgnr.metadata())
+                {
+                    Ok(_) => true,
+                    Err(e) => {
+                        tracing::error!("Failed to write metadata to storage: {}", e);
+                        false
+                    }
+                };
+
+                if metadata_write_res {
+                    tracing::debug!("New metadata file written to storage successfully");
+                } else {
+                    tracing::error!("Failed to create new metadata file to storage");
+                }
+            }
+        }
 
         // Load projects from storage
         if let Some(projects) = self.storage_handler.load_projects() {
@@ -301,6 +376,11 @@ impl Butler {
 
     /// List all projects
     pub fn list_all_projects(&self) {
+        if self.projects.is_empty() {
+            tracing::warn!("No projects stored, unable to list projects");
+            return;
+        }
+
         let mut table = Table::new();
         table.set_content_arrangement(ContentArrangement::Dynamic);
 
@@ -578,6 +658,11 @@ impl Butler {
     /// Save the butler data to storage, in bin format
     pub fn save(&self) -> bool {
         tracing::debug!("Saving data to storage");
+
+        if !self.version_mgnr.ok_to_save_files() {
+            tracing::error!("Not allowed to save files due to version incompatibility. Force override is not enabled");
+            return false;
+        }
 
         let project_storage_result =
             match self.storage_handler.store_projects(self.projects.clone()) {

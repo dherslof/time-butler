@@ -184,7 +184,7 @@ time-butler add entry --project <my_project> --hours 8 --description "Fixed a bu
 - [X] Refactor out the butler table functions to a separate file.
 - [ ] Implement the *modify* command
 - [X] Add initial pause function to a day, in order to exclude total work hours
-- [ ] Implement storage file version check in order to safe-guard reported time from being overwritten or corrupted.
+- [X] Implement storage file version check in order to safe-guard reported time from being overwritten or corrupted.
 
 **Version 1.1.0**
 - [ ] Full Implement the *info* command.

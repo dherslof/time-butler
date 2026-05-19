@@ -19,6 +19,8 @@ mod report_manager;
 mod storage_handler;
 mod tables;
 mod target;
+mod version_info;
+mod version_manager;
 mod week;
 
 use cli::{
