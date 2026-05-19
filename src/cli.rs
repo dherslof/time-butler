@@ -14,9 +14,9 @@ use clap::{Parser, Subcommand};
     name = env!("CARGO_PKG_NAME"),         // Package name from Cargo.toml
     version = env!("CARGO_PKG_VERSION"),   // Version from Cargo.toml
     about = env!("CARGO_PKG_DESCRIPTION"), // Description from Cargo.toml
-    long_about = "A tool to report time on different projects. This can be done by two ways from the CLI, interactive and direct."
+    long_about = "A time report tool that allows users to track and report their working hours in different ways. Easy and flexible direct from the command line"
 )]
-#[command(about = "A tool to report time on different projects", long_about = None)]
+#[command(about = "A time reporting tool", long_about = None)]
 pub struct Cli {
     /// Command to be selected
     #[command(subcommand)]
