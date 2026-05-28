@@ -24,8 +24,8 @@ mod version_manager;
 mod week;
 
 use cli::{
-    AddSubcommands, Cli, Commands, ConfigurationSubcommands, RemoveSubcommands, ReportSubcommands,
-    TargetTimesSubcommands,
+    AddSubcommands, Cli, Commands, ConfigurationSubcommands, ModifySubcommands, RemoveSubcommands,
+    ReportSubcommands, TargetTimesSubcommands,
 };
 use std::path::Path;
 use std::process;
@@ -335,7 +335,42 @@ fn main() {
                 }
             }
         },
-        Commands::Modify { .. } => todo!(), // all other commands
+        Commands::Modify { entity } => match entity {
+            ModifySubcommands::Project {
+                id,
+                new_name,
+                new_description,
+            } => {
+                tracing::debug!("Modifying project");
+                if !butler.modify_project(id, new_name, new_description) {
+                    tracing::info!("No project modification performed!");
+                } else {
+                    tracing::info!("Project modified successfully!");
+                    store_data = true;
+                }
+            }
+            ModifySubcommands::Day {
+                id,
+                new_extra_info,
+                new_starting_time,
+                new_ending_time,
+                new_paused_hours,
+            } => {
+                tracing::debug!("Modifying day");
+                if !butler.modify_day(
+                    id,
+                    new_extra_info,
+                    new_starting_time,
+                    new_ending_time,
+                    new_paused_hours,
+                ) {
+                    tracing::info!("Failed to modify day!");
+                } else {
+                    tracing::info!("Day modified successfully!");
+                    store_data = true;
+                }
+            }
+        },
         Commands::Info { short } => {
             tracing::debug!("Displaying storage info!");
             butler.self_info(short);

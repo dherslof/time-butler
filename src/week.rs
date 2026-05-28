@@ -44,6 +44,11 @@ impl Week {
         &self.entries
     }
 
+    /// Mutable getter for `entries`
+    pub fn entries_mut(&mut self) -> &mut Vec<Day> {
+        &mut self.entries
+    }
+
     pub fn year(&self) -> i32 {
         self.year
     }

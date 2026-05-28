@@ -91,6 +91,16 @@ impl Project {
         }
         None
     }
+
+    /// Update the project name
+    pub fn update_name(&mut self, new_name: String) {
+        self.name = new_name;
+    }
+
+    /// Update the project description
+    pub fn update_description(&mut self, new_description: String) {
+        self.description = Some(new_description);
+    }
 }
 
 /// Implement Display for Project
