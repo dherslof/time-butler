@@ -69,17 +69,11 @@ pub enum Commands {
         #[command(subcommand)]
         entity: RemoveSubcommands, // This should maybe be a separate enum, in order to not need to provide the same arguments
     },
-    /// Modify a project or entry
+    /// Modify details in a Project or Day
     Modify {
         /// Project name
-        #[arg(short, long)]
-        project: Option<String>,
-        /// Entry ID
-        #[arg(short, long)]
-        entry: Option<String>,
-        /// Day date
-        #[arg(short, long)]
-        day: Option<String>,
+        #[command(subcommand)]
+        entity: ModifySubcommands,
     },
 
     /// Short info regarding internal storage
@@ -184,14 +178,34 @@ pub enum RemoveSubcommands {
 #[derive(Subcommand)]
 pub enum ModifySubcommands {
     Project {
-        /// Project name
-        #[arg(short, long)]
-        name: Option<String>,
-        /// description of the project
-        #[arg(short, long)]
-        description: Option<String>,
+        /// Project ID
+        #[arg(long)]
+        id: String,
+        /// New name of the project
+        #[arg(long)]
+        new_name: Option<String>,
+
+        /// New description of the project
+        #[arg(long)]
+        new_description: Option<String>,
     },
-    //TODO: add more sub-options, day, entry, etc.
+    Day {
+        /// ID
+        #[arg(long)]
+        id: String,
+        /// Extra info for the day
+        #[arg(long)]
+        new_extra_info: Option<String>,
+        /// New starting time - RFC3339 format, e.g. "2021-05-01T08:00:00Z".
+        #[arg(long)]
+        new_starting_time: Option<String>,
+        /// New ending time - RFC3339 format, e.g. "2021-05-01T17:00:00Z".
+        #[arg(long)]
+        new_ending_time: Option<String>,
+        /// New paused hours during day
+        #[arg(long)]
+        new_paused_hours: Option<String>,
+    },
 }
 
 #[derive(Subcommand)]

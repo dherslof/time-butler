@@ -20,13 +20,11 @@ use serde_json::Value;
 use crate::day::Day;
 use crate::project::Project;
 use crate::week::Week;
-// TODO: way to bundle the report stuff together?
-use crate::report::MonthReportColumns;
-use crate::report::ParseReportFormatError;
-use crate::report::ProjectReportColumns;
-use crate::report::ReportFormat;
-use crate::report::ReportGenerationFailure;
-use crate::report::WeekReportColumns;
+
+use crate::report::{
+    MonthReportColumns, ParseReportFormatError, ProjectReportColumns, ReportFormat,
+    ReportGenerationFailure, WeekReportColumns,
+};
 
 //TODO: Improvement - Can the report creating functions be done in smarter way, feels stupid to repeat the same code for each report type
 

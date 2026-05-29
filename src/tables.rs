@@ -25,6 +25,7 @@ pub fn get_table_day() -> Table {
         Cell::new("Hours"),
         Cell::new("Closed"),
         Cell::new("Extra info"),
+        Cell::new("ID"),
     ]);
 
     table
@@ -107,6 +108,7 @@ pub fn print_day_in_report_table(day: &Day) {
         Cell::new(day.hours().to_string()),
         Cell::new(day.closed().to_string()),
         Cell::new(day.extra_info()),
+        Cell::new(day.id().to_string()),
     ]);
 
     println!("{}", table);

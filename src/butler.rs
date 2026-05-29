@@ -6,7 +6,7 @@
  * License: MIT
  */
 
-use chrono::Datelike;
+use chrono::{Datelike, LocalResult, NaiveDateTime, TimeZone};
 use comfy_table::{Cell, ContentArrangement, Table};
 use std::collections::BTreeMap;
 use std::io::{self, Write};
@@ -184,6 +184,171 @@ impl Butler {
             .set_report_storage_dir(self.configuration.report_directory().to_string());
 
         tracing::debug!("Initialization complete!");
+    }
+
+    pub fn modify_project(
+        &mut self,
+        project_id: String,
+        new_name: Option<String>,
+        new_description: Option<String>,
+    ) -> bool {
+        // Convert project_id string to Uuid
+        let project_id = match Uuid::parse_str(&project_id) {
+            Ok(parsed_id) => {
+                tracing::debug!("Parsed project ID: {}", parsed_id);
+                parsed_id
+            }
+            Err(e) => {
+                tracing::error!("Failed to parse project ID: {}", e);
+                return false;
+            }
+        };
+        let project_index = match self.projects.iter().position(|p| p.id() == &project_id) {
+            Some(index) => index,
+            None => {
+                tracing::error!(
+                    "Project with ID {} not found, unable to modify project",
+                    project_id
+                );
+                return false;
+            }
+        };
+
+        let current_project_name = self.projects[project_index].name().to_string();
+
+        if let Some(ref requested_new_name) = new_name {
+            // Check if new name already exists in another project to prevent duplicates
+            if self
+                .projects
+                .iter()
+                .enumerate()
+                .any(|(i, p)| i != project_index && p.name() == requested_new_name)
+            {
+                tracing::error!(
+                    "Project with name {} already exists, unable to update project name",
+                    requested_new_name
+                );
+                return false;
+            }
+
+            // Prompt user for confirmation before mutating the project name
+            if !Self::prompt_user_confirmation(&format!(
+                "Are you sure you want to change the project name from {} to {}?",
+                current_project_name, requested_new_name
+            )) {
+                tracing::info!(
+                    "User chose not to proceed with project name change, aborting modification"
+                );
+                return false;
+            }
+        }
+
+        if let Some(ref requested_new_description) = new_description {
+            if !Self::prompt_user_confirmation(&format!(
+                "Are you sure you want to change the project description from {} to {}?",
+                current_project_name, requested_new_description
+            )) {
+                tracing::info!(
+                    "User chose not to proceed with project description change, aborting modification"
+                );
+                return false;
+            }
+        }
+
+        let p = &mut self.projects[project_index];
+
+        if let Some(new_name) = new_name {
+            p.update_name(new_name);
+        }
+
+        if let Some(new_description) = new_description {
+            p.update_description(new_description);
+        }
+
+        tracing::info!("Project {} modified successfully", current_project_name);
+        true
+    }
+
+    pub fn modify_day(
+        &mut self,
+        id: String,
+        new_extra_info: Option<String>,
+        new_starting_time: Option<String>,
+        new_ending_time: Option<String>,
+        new_paused_hours: Option<String>,
+    ) -> bool {
+        // This can be moved out to a support function
+        let day_id = match Uuid::parse_str(&id) {
+            Ok(parsed_id) => {
+                tracing::debug!("Parsed day ID: {}", parsed_id);
+                parsed_id
+            }
+            Err(e) => {
+                tracing::error!("Failed to parse day ID: {}", e);
+                return false;
+            }
+        };
+
+        for w in &mut self.weeks {
+            if let Some(day) = w.entries_mut().iter_mut().find(|d| d.id() == &day_id) {
+                // Day found
+
+                if let Some(new_extra_info) = new_extra_info {
+                    if !Self::prompt_user_confirmation(&format!(
+                        "Are you sure you want to change the Days extra info from '{}' to '{}'?",
+                        day.extra_info(),
+                        new_extra_info
+                    )) {
+                        tracing::info!(
+                    "User chose not to proceed with extra info change, aborting modification"
+                );
+                        return false;
+                    }
+                    day.set_extra_info(new_extra_info);
+                }
+
+                if let Some(new_starting_time_str) = new_starting_time {
+                    match Self::parse_datetime_as_local_time(&new_starting_time_str) {
+                        Ok(new_starting_time) => {
+                            day.set_starting_time(Some(&new_starting_time));
+                        }
+                        Err(e) => {
+                            tracing::error!("Failed to parse new starting time: {}", e);
+                            return false;
+                        }
+                    }
+                }
+
+                if let Some(new_ending_time_str) = new_ending_time {
+                    match Self::parse_datetime_as_local_time(&new_ending_time_str) {
+                        Ok(new_ending_time) => {
+                            day.set_ending_time(Some(&new_ending_time));
+                        }
+                        Err(e) => {
+                            tracing::error!("Failed to parse new ending time: {}", e);
+                            return false;
+                        }
+                    }
+                }
+
+                if let Some(new_paused_hours_str) = new_paused_hours {
+                    match new_paused_hours_str.parse::<f32>() {
+                        Ok(new_paused_hours) => {
+                            day.set_paused_time(new_paused_hours);
+                        }
+                        Err(e) => {
+                            tracing::error!("Failed to parse new paused hours: {}", e);
+                            return false;
+                        }
+                    }
+                }
+
+                tracing::info!("Day with ID {} modified successfully", id);
+                tables::print_day_in_report_table(day);
+                return true;
+            }
+        }
+        true
     }
 
     /// Display information about the Butler
@@ -484,9 +649,11 @@ impl Butler {
                     Cell::new(d.date().to_string()),
                     Cell::new(start_time),
                     Cell::new(end_time),
+                    Cell::new(d.hours_paused().to_string()),
                     Cell::new(d.hours().to_string()),
                     Cell::new(d.closed().to_string()),
                     Cell::new(d.extra_info()),
+                    Cell::new(d.id().to_string()),
                 ]);
             }
 
@@ -532,9 +699,11 @@ impl Butler {
                     Cell::new(d.date().to_string()),
                     Cell::new(start_time),
                     Cell::new(end_time),
+                    Cell::new(d.hours_paused().to_string()),
                     Cell::new(d.hours().to_string()),
                     Cell::new(d.closed().to_string()),
                     Cell::new(d.extra_info()),
+                    Cell::new(d.id().to_string()),
                 ]);
             }
 
@@ -853,6 +1022,7 @@ impl Butler {
                 let mut table = tables::get_table_day();
 
                 table.add_row(vec![
+                    Cell::new(day_cpy.id().to_string()),
                     Cell::new(day_cpy.week().to_string()),
                     Cell::new(day_cpy.date().to_string()),
                     Cell::new(
@@ -867,6 +1037,7 @@ impl Butler {
                             .map(|dt| dt.to_string())
                             .unwrap_or_else(|| "N/A".to_string()),
                     ),
+                    Cell::new(day_cpy.hours_paused().to_string()),
                     Cell::new(day_cpy.hours().to_string()),
                     Cell::new(day_cpy.closed().to_string()),
                     Cell::new(day_cpy.extra_info()),
@@ -1074,5 +1245,39 @@ impl Butler {
             }
         }
         weeks
+    }
+
+    /// Accepted input:
+    /// - RFC3339 with timezone (timezone is ignored to preserve typed wall-clock time)
+    /// - Local datetime without timezone: `YYYY-MM-DDTHH:MM:SS[.frac]`
+    fn parse_datetime_as_local_time(
+        input: &str,
+    ) -> Result<chrono::DateTime<chrono::Local>, String> {
+        let naive = if let Ok(dt) = chrono::DateTime::parse_from_rfc3339(input) {
+            // Keep the wall-clock values as typed by the user.
+            dt.naive_local()
+        } else {
+            NaiveDateTime::parse_from_str(input, "%Y-%m-%dT%H:%M:%S%.f")
+                .map_err(|e| {
+                    format!(
+                        "Invalid datetime format '{}': {}. Expected RFC3339 or YYYY-MM-DDTHH:MM:SS[.frac]",
+                        input, e
+                    )
+                })?
+        };
+
+        match chrono::Local.from_local_datetime(&naive) {
+            LocalResult::Single(dt) => Ok(dt),
+            LocalResult::Ambiguous(dt, _) => {
+                tracing::warn!(
+                    "Ambiguous local datetime due to DST transition, selecting earliest instance"
+                );
+                Ok(dt)
+            }
+            LocalResult::None => Err(format!(
+                "Local datetime '{}' does not exist in current timezone (DST transition)",
+                input
+            )),
+        }
     }
 }

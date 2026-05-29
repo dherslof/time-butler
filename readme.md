@@ -74,7 +74,22 @@ The possibility of setting the target hours for a month and week. Default target
 can be updated in the configuration file.
 
 ### Modify
-**to-be-implemented**
+Modifies an already reported day or created project. It's easly done by using the **ID** of the Day/project and the new field you want to update. 
+All fields can not be modified, but some of them will be updated based on a modified field if they have a relation. 
+
+In order to update the starting time of a day, following exmaple command can be used
+```bash
+time-butler modify day --id <unique_id> --new-starting-time "<new_starting_time>"
+```
+
+Here the time format has to be `RFC3339` => "2026-05-01T08:00:00Z". 
+
+The project fields are modified in the same way. For detailed help
+```bash
+time-butler modify --help
+```
+
+**Note**: A project time entry can't be modified, instead remove it and create a new one. 
 
 ### Info
 **to-be-implemented**
@@ -104,7 +119,7 @@ RUST_LOG=debug cargo run -- <command-to-run>
 ## App
 
 ### Environment
-time-butler is to start with, only supported in linux.
+time-butler is developed on **linux** for **linux**. Other OSes are supported but not really in focus. Hence all documentation and examples are written for linux. If you use a non linux OS and find any issues, please report it. 
 
 ### Storage
 By default, time-butler uses following path as a work directory: `/home/$USER/.local/time-butler`.
@@ -182,7 +197,7 @@ time-butler add entry --project <my_project> --hours 8 --description "Fixed a bu
 - [X] Add Target, with status for stored time containers
 - [X] Verify all the document comments for cli. Make sure they are updated and correct.
 - [X] Refactor out the butler table functions to a separate file.
-- [ ] Implement the *modify* command
+- [X] Implement the *modify* command
 - [X] Add initial pause function to a day, in order to exclude total work hours
 - [X] Implement storage file version check in order to safe-guard reported time from being overwritten or corrupted.
 

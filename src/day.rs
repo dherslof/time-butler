@@ -9,6 +9,7 @@
 use chrono::{DateTime, Datelike, Local, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use std::fmt;
+use uuid::Uuid;
 
 const K_WORK_HOURS_DEFAULT: f32 = 8.0;
 const K_NO_HOURS: f32 = 0.0;
@@ -38,6 +39,8 @@ pub struct Day {
     closed: bool,
     // Time duration as paused
     hours_paused: f32,
+    /// Unique ID for the day
+    id: uuid::Uuid,
 }
 
 impl Day {
@@ -55,6 +58,7 @@ impl Day {
             ending_time_set: false,
             closed: false,
             hours_paused: K_NO_HOURS,
+            id: Uuid::new_v4(),
         }
     }
 
@@ -95,6 +99,11 @@ impl Day {
         self.hours_paused
     }
 
+    // Getter for `id`
+    pub fn id(&self) -> &uuid::Uuid {
+        &self.id
+    }
+
     /// Setter for `starting_time`
     pub fn set_starting_time(&mut self, t: Option<&DateTime<Local>>) {
         match t {
@@ -119,6 +128,7 @@ impl Day {
             if self.hours < K_WORK_HOURS_DEFAULT {
                 println!("WARNING: You have worked less than 8 hours today.");
             }
+            self.update_date_and_week_();
         }
     }
 
@@ -152,6 +162,11 @@ impl Day {
             self.hours_paused = paused;
         } else {
             tracing::warn!("Cannot set paused time before starting time is set. Provided paused time will be ignored");
+        }
+
+        // If used during modification, recalculate hours if both times are set
+        if self.start_time_set && self.ending_time_set {
+            self.hours = self.calculate_hours();
         }
     }
 
@@ -215,6 +230,27 @@ impl Day {
             worked_hours
         } else {
             net_hours
+        }
+    }
+
+    fn update_date_and_week_(&mut self) {
+        // Will be used when modifying a day, to update the date and week if the starting time is modified.
+        if let Some(starting_time) = self.starting_time {
+            let updated_date = starting_time.date_naive();
+            let updated_week = starting_time.iso_week().week();
+            tracing::debug!(
+                "Updating date and week based on starting time. New date: {}, New week: {}",
+                updated_date,
+                updated_week
+            );
+            if self.date != updated_date {
+                self.date = updated_date;
+            }
+            if self.week != updated_week {
+                self.week = updated_week;
+            }
+        } else {
+            tracing::debug!("Cannot update date and week as starting time is not set.");
         }
     }
 }
