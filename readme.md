@@ -116,6 +116,18 @@ $ cargo install --path .
 RUST_LOG=debug cargo run -- <command-to-run>
 ```
 
+## Testing
+Unit tests can be executed with:
+```bash
+cargo llvm-cov
+```
+for coverage, or for only test 
+
+```bash
+cargo test
+
+```
+
 ## App
 
 ### Environment

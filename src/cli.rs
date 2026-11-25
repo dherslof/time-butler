@@ -256,7 +256,7 @@ pub enum ReportSubcommands {
 
 #[derive(Subcommand)]
 pub enum TargetTimesSubcommands {
-    /// Set target for the week
+    /// Display target for the week
     Week {
         /// Week number
         #[arg(short, long)]
@@ -265,7 +265,7 @@ pub enum TargetTimesSubcommands {
         #[arg(short, long)]
         year: u32,
     },
-    /// Set target for the month
+    /// Display target for the month
     Month {
         /// Month number
         #[arg(short, long)]
@@ -274,6 +274,7 @@ pub enum TargetTimesSubcommands {
         #[arg(short, long)]
         year: u32,
     },
+    // TODO: add subcommand "set" where user can set the target times for week/month/year
 }
 
 #[derive(Subcommand)]

@@ -140,3 +140,169 @@ impl Week {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::{Duration, Local, TimeZone};
+
+    #[test]
+    fn test_week_creation() {
+        let week = Week::new(1, 2026, 40.0);
+        assert_eq!(week.number(), 1);
+        assert_eq!(week.year(), 2026);
+        assert_eq!(week.target_hours(), 40.0);
+        assert!(week.entries().is_empty());
+    }
+
+    #[test]
+    fn test_week_add_entry() {
+        let mut week = Week::new(1, 2026, 40.0);
+        let day = Day::new(None);
+        week.add_entry(day.clone());
+        assert_eq!(week.entries().len(), 1);
+        assert_eq!(week.entries()[0].date(), day.date());
+    }
+
+    #[test]
+    fn test_week_exists() {
+        let mut week = Week::new(1, 2026, 40.0);
+        let day = Day::new(None);
+        week.add_entry(day.clone());
+        assert!(week.exists(&day));
+        assert!(week.exist(&day.date()));
+    }
+
+    #[test]
+    fn test_week_exists_false_when_not_added() {
+        let week = Week::new(1, 2026, 40.0);
+        let day = Day::new(None);
+
+        assert!(!week.exists(&day));
+    }
+
+    #[test]
+    fn test_week_exist_false_for_empty_week() {
+        let week = Week::new(1, 2026, 40.0);
+        let date = NaiveDate::from_ymd_opt(2026, 1, 1).unwrap();
+
+        assert!(!week.exist(&date));
+    }
+
+    #[test]
+    fn test_week_merge_day() {
+        let mut week = Week::new(1, 2026, 40.0);
+        let mut day = Day::new(None);
+        day.set_extra_info("Initial info".to_string());
+        week.add_entry(day.clone());
+
+        let mut modified_day = day.clone();
+        modified_day.set_extra_info("Modified info".to_string());
+
+        assert!(week.merge_day(&modified_day));
+        assert_eq!(week.entries()[0].extra_info(), "Initial info");
+    }
+
+    #[test]
+    fn test_week_remove_listed_day() {
+        let mut week = Week::new(1, 2026, 40.0);
+        let day = Day::new(None);
+        week.add_entry(day.clone());
+
+        assert!(week.remove_listed_day(&day.date()));
+        assert!(!week.exist(&day.date()));
+    }
+
+    #[test]
+    fn test_week_remove_listed_day_nonexistent_returns_false() {
+        let mut week = Week::new(1, 2026, 40.0);
+        let day = Day::new(None);
+        week.add_entry(day);
+
+        let missing_date = NaiveDate::from_ymd_opt(2026, 1, 1).unwrap();
+        assert!(!week.remove_listed_day(&missing_date));
+        assert_eq!(week.entries().len(), 1);
+    }
+
+    #[test]
+    fn test_week_get_day_copy() {
+        let mut week = Week::new(1, 2026, 40.0);
+        let mut day = Day::new(None);
+        day.set_extra_info("Keep this info".to_string());
+        week.add_entry(day.clone());
+
+        let day_copy = week.get_day_copy(&day.date());
+        assert!(day_copy.is_some());
+        let day_copy = day_copy.unwrap();
+        assert_eq!(day_copy.date(), day.date());
+        assert_eq!(day_copy.extra_info(), "Keep this info");
+    }
+
+    #[test]
+    fn test_week_get_day_copy_nonexistent() {
+        let week = Week::new(1, 2026, 40.0);
+        let day_copy = week.get_day_copy(&NaiveDate::from_ymd_opt(2026, 1, 1).unwrap());
+        assert!(day_copy.is_none());
+    }
+
+    #[test]
+    fn test_week_merge_day_nonexistent() {
+        let mut week = Week::new(1, 2026, 40.0);
+        let day = Day::new(None);
+        assert!(!week.merge_day(&day));
+        assert!(week.entries().is_empty());
+    }
+
+    #[test]
+    fn test_week_merge_day_closed() {
+        let mut week = Week::new(1, 2026, 40.0);
+        let mut day = Day::new(None);
+        day.set_extra_info("Initial info".to_string());
+        let start = chrono::Local::now();
+        let end = start + chrono::Duration::hours(8);
+        day.set_starting_time(Some(&start));
+        day.set_ending_time(Some(&end));
+        week.add_entry(day.clone());
+
+        let mut modified_day = day.clone();
+        modified_day.set_extra_info("Modified info".to_string());
+
+        assert!(!week.merge_day(&modified_day));
+        assert_eq!(week.entries()[0].extra_info(), "Initial info");
+    }
+
+    #[test]
+    fn test_week_entries_mut_can_push_day() {
+        let mut week = Week::new(1, 2026, 40.0);
+        let day = Day::new(None);
+
+        week.entries_mut().push(day);
+
+        assert_eq!(week.entries().len(), 1);
+    }
+
+    #[test]
+    fn test_week_merge_day_sets_start_end_and_extra_info() {
+        let mut week = Week::new(1, 2026, 40.0);
+        let day = Day::new(None);
+        week.add_entry(day.clone());
+
+        let start = Local
+            .with_ymd_and_hms(2026, 1, 2, 9, 0, 0)
+            .single()
+            .unwrap();
+        let end = start + Duration::hours(8);
+
+        let mut modified_day = day.clone();
+        modified_day.set_starting_time(Some(&start));
+        modified_day.set_ending_time(Some(&end));
+        modified_day.set_extra_info("Merged info".to_string());
+
+        assert!(week.merge_day(&modified_day));
+
+        let merged = &week.entries()[0];
+        assert!(merged.start_time_set());
+        assert!(merged.ending_time_set());
+        assert_eq!(merged.extra_info(), "Merged info");
+    }
+}

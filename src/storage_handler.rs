@@ -71,7 +71,7 @@ impl StorageHandler {
 
         // Now the correct paths are set
         instance.backup_organizer = BackupOrganizer::new(
-            format!("{}/{}", &instance.storage_dir, BACKUP_DIR).as_str(),
+            format!("{}/{}", instance.storage_dir, BACKUP_DIR).as_str(),
             &instance.project_data_file_path,
             &instance.week_data_file_path,
             &instance.storage_dir,

@@ -110,3 +110,122 @@ pub enum ReportType {
     Short,
 }
 */
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // --- ReportFormat::from_str ---
+
+    #[test]
+    fn test_report_format_from_str_all_valid_variants() {
+        assert!(matches!(
+            "json".parse::<ReportFormat>(),
+            Ok(ReportFormat::Json)
+        ));
+        assert!(matches!(
+            "csv".parse::<ReportFormat>(),
+            Ok(ReportFormat::Csv)
+        ));
+        assert!(matches!(
+            "yaml".parse::<ReportFormat>(),
+            Ok(ReportFormat::Yaml)
+        ));
+        assert!(matches!(
+            "html".parse::<ReportFormat>(),
+            Ok(ReportFormat::Html)
+        ));
+        assert!(matches!(
+            "pdf".parse::<ReportFormat>(),
+            Ok(ReportFormat::Pdf)
+        ));
+        assert!(matches!(
+            "text".parse::<ReportFormat>(),
+            Ok(ReportFormat::Text)
+        ));
+    }
+
+    #[test]
+    fn test_report_format_from_str_is_case_insensitive() {
+        assert!(matches!(
+            "JSON".parse::<ReportFormat>(),
+            Ok(ReportFormat::Json)
+        ));
+        assert!(matches!(
+            "CSV".parse::<ReportFormat>(),
+            Ok(ReportFormat::Csv)
+        ));
+        assert!(matches!(
+            "YAML".parse::<ReportFormat>(),
+            Ok(ReportFormat::Yaml)
+        ));
+        assert!(matches!(
+            "HTML".parse::<ReportFormat>(),
+            Ok(ReportFormat::Html)
+        ));
+        assert!(matches!(
+            "PDF".parse::<ReportFormat>(),
+            Ok(ReportFormat::Pdf)
+        ));
+        assert!(matches!(
+            "TEXT".parse::<ReportFormat>(),
+            Ok(ReportFormat::Text)
+        ));
+    }
+
+    #[test]
+    fn test_report_format_from_str_unknown_returns_error() {
+        assert!("xml".parse::<ReportFormat>().is_err());
+        assert!("".parse::<ReportFormat>().is_err());
+        assert!("markdown".parse::<ReportFormat>().is_err());
+    }
+
+    // --- Clone and Debug ---
+
+    #[test]
+    fn test_report_format_clone() {
+        let original = ReportFormat::Json;
+        let cloned = original.clone();
+        assert!(matches!(cloned, ReportFormat::Json));
+    }
+
+    #[test]
+    fn test_report_format_debug_is_non_empty() {
+        let fmt = format!("{:?}", ReportFormat::Csv);
+        assert!(!fmt.is_empty());
+    }
+
+    // --- ParseReportFormatError Display ---
+
+    #[test]
+    fn test_parse_report_format_error_display() {
+        let err = ParseReportFormatError;
+        assert_eq!(format!("{}", err), "invalid report format");
+    }
+
+    #[test]
+    fn test_parse_report_format_error_debug_is_non_empty() {
+        let err = ParseReportFormatError;
+        assert!(!format!("{:?}", err).is_empty());
+    }
+
+    // --- ReportGenerationFailure Display and Error ---
+
+    #[test]
+    fn test_report_generation_failure_display() {
+        let err = ReportGenerationFailure;
+        assert_eq!(format!("{}", err), "Failed to generate report");
+    }
+
+    #[test]
+    fn test_report_generation_failure_is_error_trait() {
+        let err = ReportGenerationFailure;
+        let _: &dyn std::error::Error = &err;
+    }
+
+    #[test]
+    fn test_report_generation_failure_debug_is_non_empty() {
+        let err = ReportGenerationFailure;
+        assert!(!format!("{:?}", err).is_empty());
+    }
+}

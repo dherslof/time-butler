@@ -128,3 +128,99 @@ pub fn print_entry_in_report_table(entry: &Entry, project_name: &str) {
 
     println!("{}", table);
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::{Duration, Local, TimeZone};
+
+    #[test]
+    fn test_get_table_day_contains_expected_headers() {
+        let rendered = format!("{}", get_table_day());
+
+        assert!(rendered.contains("Week"));
+        assert!(rendered.contains("Date"));
+        assert!(rendered.contains("Start"));
+        assert!(rendered.contains("End"));
+        assert!(rendered.contains("Paused"));
+        assert!(rendered.contains("Hours"));
+        assert!(rendered.contains("Closed"));
+        assert!(rendered.contains("Extra"));
+        assert!(rendered.contains("ID"));
+    }
+
+    #[test]
+    fn test_get_table_entry_contains_expected_headers() {
+        let rendered = format!("{}", get_table_entry());
+
+        assert!(rendered.contains("Project"));
+        assert!(rendered.contains("Description"));
+        assert!(rendered.contains("Hours"));
+        assert!(rendered.contains("Created"));
+        assert!(rendered.contains("ID"));
+    }
+
+    #[test]
+    fn test_get_table_target_week_contains_expected_headers() {
+        let mut table = get_table_target_week();
+        table.add_row(vec![
+            Cell::new("W1"),
+            Cell::new("40"),
+            Cell::new("32"),
+            Cell::new("80"),
+            Cell::new("ONTRACK"),
+            Cell::new("8"),
+            Cell::new("0"),
+            Cell::new("MANUAL"),
+        ]);
+        let rendered = format!("{}", table);
+
+        assert!(rendered.contains("Week"));
+        assert!(rendered.contains("W1"));
+        assert!(rendered.contains("ONTRACK"));
+        assert!(rendered.contains("MANUAL"));
+    }
+
+    #[test]
+    fn test_get_table_target_month_contains_expected_headers() {
+        let mut table = get_table_target_month();
+        table.add_row(vec![
+            Cell::new("Jan"),
+            Cell::new("160"),
+            Cell::new("120"),
+            Cell::new("75"),
+            Cell::new("IP"),
+            Cell::new("40"),
+            Cell::new("0"),
+            Cell::new("CFG"),
+        ]);
+        let rendered = format!("{}", table);
+
+        assert!(rendered.contains("Month"));
+        assert!(rendered.contains("Jan"));
+        assert!(rendered.contains("IP"));
+        assert!(rendered.contains("CFG"));
+    }
+
+    #[test]
+    fn test_print_day_in_report_table_smoke() {
+        let mut day = Day::new(Some("Daily report".to_string()));
+        let start = Local
+            .with_ymd_and_hms(2026, 1, 20, 9, 0, 0)
+            .single()
+            .unwrap();
+        let end = start + Duration::hours(8);
+        day.set_starting_time(Some(&start));
+        day.set_ending_time(Some(&end));
+        day.set_paused_time(0.5);
+
+        print_day_in_report_table(&day);
+    }
+
+    #[test]
+    fn test_print_entry_in_report_table_smoke() {
+        let entry = Entry::new(2.5, Some("Table print".to_string()));
+
+        print_entry_in_report_table(&entry, "Test Project");
+    }
+}
