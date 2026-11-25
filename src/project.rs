@@ -116,3 +116,138 @@ impl fmt::Display for Project {
         )
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_project_creation_defaults() {
+        let project = Project::new("Time Butler".to_string(), None);
+
+        assert_eq!(project.name(), "Time Butler");
+        assert_eq!(project.description(), None);
+        assert!(project.entries().is_empty());
+    }
+
+    #[test]
+    fn test_project_creation_with_description() {
+        let project = Project::new("Time Butler".to_string(), Some("Tracker".to_string()));
+
+        assert_eq!(project.description(), Some("Tracker"));
+    }
+
+    #[test]
+    fn test_project_id_is_unique() {
+        let p1 = Project::new("A".to_string(), None);
+        let p2 = Project::new("B".to_string(), None);
+
+        assert_ne!(p1.id(), p2.id());
+    }
+
+    #[test]
+    fn test_project_add_entry() {
+        let mut project = Project::new("Time Butler".to_string(), None);
+        let entry = Entry::new(2.5, Some("Planning".to_string()));
+
+        project.add_entry(entry.clone());
+
+        assert_eq!(project.entries().len(), 1);
+        assert_eq!(project.entries()[0].id(), entry.id());
+    }
+
+    #[test]
+    fn test_project_entry_exists_true_after_add() {
+        let mut project = Project::new("Time Butler".to_string(), None);
+        let entry = Entry::new(1.0, None);
+        let id = *entry.id();
+        project.add_entry(entry);
+
+        assert!(project.entry_exists(&id));
+    }
+
+    #[test]
+    fn test_project_entry_exists_false_when_missing() {
+        let project = Project::new("Time Butler".to_string(), None);
+        let missing_id = Uuid::new_v4();
+
+        assert!(!project.entry_exists(&missing_id));
+    }
+
+    #[test]
+    fn test_project_get_entry_copy_returns_some_for_existing() {
+        let mut project = Project::new("Time Butler".to_string(), None);
+        let entry = Entry::new(3.0, Some("Implementation".to_string()));
+        let id = *entry.id();
+        project.add_entry(entry.clone());
+
+        let copy = project.get_entry_copy(&id);
+
+        assert!(copy.is_some());
+        let copy = copy.unwrap();
+        assert_eq!(copy.id(), entry.id());
+        assert_eq!(copy.hours(), entry.hours());
+        assert_eq!(copy.description(), entry.description());
+    }
+
+    #[test]
+    fn test_project_get_entry_copy_returns_none_for_missing() {
+        let project = Project::new("Time Butler".to_string(), None);
+        let missing_id = Uuid::new_v4();
+
+        assert!(project.get_entry_copy(&missing_id).is_none());
+    }
+
+    #[test]
+    fn test_project_remove_listed_entry_success() {
+        let mut project = Project::new("Time Butler".to_string(), None);
+        let entry = Entry::new(4.0, Some("Refactor".to_string()));
+        let id = *entry.id();
+        project.add_entry(entry);
+
+        assert!(project.remove_listed_entry(&id));
+        assert!(!project.entry_exists(&id));
+        assert!(project.entries().is_empty());
+    }
+
+    #[test]
+    fn test_project_remove_listed_entry_nonexistent_returns_false() {
+        let mut project = Project::new("Time Butler".to_string(), None);
+        project.add_entry(Entry::new(1.0, None));
+        let missing_id = Uuid::new_v4();
+
+        assert!(!project.remove_listed_entry(&missing_id));
+        assert_eq!(project.entries().len(), 1);
+    }
+
+    #[test]
+    fn test_project_update_name() {
+        let mut project = Project::new("Old Name".to_string(), None);
+
+        project.update_name("New Name".to_string());
+
+        assert_eq!(project.name(), "New Name");
+    }
+
+    #[test]
+    fn test_project_update_description() {
+        let mut project = Project::new("Time Butler".to_string(), None);
+
+        project.update_description("Updated description".to_string());
+
+        assert_eq!(project.description(), Some("Updated description"));
+    }
+
+    #[test]
+    fn test_project_display_contains_key_fields() {
+        let mut project = Project::new("My Project".to_string(), Some("Desc".to_string()));
+        project.add_entry(Entry::new(1.5, Some("Task".to_string())));
+
+        let rendered = format!("{}", project);
+
+        assert!(rendered.contains("Name: My Project"));
+        assert!(rendered.contains("Description:"));
+        assert!(rendered.contains("Entries: 1"));
+        assert!(rendered.contains("ID:"));
+    }
+}

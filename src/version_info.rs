@@ -58,3 +58,85 @@ pub struct FileStorageMetadata {
     /// The version of the storage file format
     pub storage_file_version: String,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // --- VersionInfo::new ---
+
+    #[test]
+    fn test_app_version_matches_cargo_pkg_version() {
+        let v = VersionInfo::new();
+        assert_eq!(v.get_app_version(), env!("CARGO_PKG_VERSION"));
+    }
+
+    #[test]
+    fn test_storage_file_version_is_major_only() {
+        let v = VersionInfo::new();
+        let expected_major = env!("CARGO_PKG_VERSION").split('.').next().unwrap_or("");
+        assert_eq!(v.get_storage_file_version(), expected_major);
+    }
+
+    #[test]
+    fn test_storage_file_version_contains_no_dots() {
+        let v = VersionInfo::new();
+        assert!(!v.get_storage_file_version().contains('.'));
+    }
+
+    #[test]
+    fn test_app_version_is_valid_semver_shape() {
+        let v = VersionInfo::new();
+        let version = v.get_app_version();
+        let parts: Vec<&str> = version.split('.').collect();
+        assert_eq!(parts.len(), 3, "expected major.minor.patch format");
+    }
+
+    // --- as_metadata ---
+
+    #[test]
+    fn test_as_metadata_storage_file_version_matches() {
+        let v = VersionInfo::new();
+        let meta = v.as_metadata();
+        assert_eq!(meta.storage_file_version, v.get_storage_file_version());
+    }
+
+    // --- Clone and Debug ---
+
+    #[test]
+    fn test_version_info_clone_preserves_values() {
+        let v = VersionInfo::new();
+        let c = v.clone();
+        assert_eq!(v.get_app_version(), c.get_app_version());
+        assert_eq!(v.get_storage_file_version(), c.get_storage_file_version());
+    }
+
+    #[test]
+    fn test_version_info_debug_is_non_empty() {
+        let v = VersionInfo::new();
+        assert!(!format!("{:?}", v).is_empty());
+    }
+
+    #[test]
+    fn test_file_storage_metadata_clone_preserves_values() {
+        let meta = VersionInfo::new().as_metadata();
+        let cloned = meta.clone();
+        assert_eq!(meta.storage_file_version, cloned.storage_file_version);
+    }
+
+    #[test]
+    fn test_file_storage_metadata_debug_is_non_empty() {
+        let meta = VersionInfo::new().as_metadata();
+        assert!(!format!("{:?}", meta).is_empty());
+    }
+
+    // --- FileStorageMetadata serde round-trip ---
+
+    #[test]
+    fn test_file_storage_metadata_serde_round_trip() {
+        let meta = VersionInfo::new().as_metadata();
+        let json = serde_json::to_string(&meta).unwrap();
+        let parsed: FileStorageMetadata = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.storage_file_version, meta.storage_file_version);
+    }
+}

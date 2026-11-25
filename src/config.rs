@@ -209,3 +209,159 @@ pub struct VersionConfiguration {
     #[serde(rename = "always-force-halt-on-version-incompatibility")]
     pub always_force_halt_on_version_incompatibility: bool,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn make_default() -> AppConfiguration {
+        AppConfiguration::new_default(&"/home/testuser".to_string())
+    }
+
+    // --- new_default path construction ---
+
+    #[test]
+    fn test_new_default_storage_directory() {
+        let cfg = make_default();
+        assert_eq!(cfg.storage_directory(), "/home/testuser/.local/time-butler");
+    }
+
+    #[test]
+    fn test_new_default_project_data_path() {
+        let cfg = make_default();
+        assert_eq!(
+            cfg.project_data_path(),
+            "/home/testuser/.local/time-butler/.app_storage/prj_data.bin"
+        );
+    }
+
+    #[test]
+    fn test_new_default_week_data_path() {
+        let cfg = make_default();
+        assert_eq!(
+            cfg.week_data_path(),
+            "/home/testuser/.local/time-butler/.app_storage/week_data.bin"
+        );
+    }
+
+    #[test]
+    fn test_new_default_report_directory() {
+        let cfg = make_default();
+        assert_eq!(
+            cfg.report_directory(),
+            "/home/testuser/.local/time-butler/generated-reports"
+        );
+    }
+
+    #[test]
+    fn test_new_default_backup_directory() {
+        let cfg = make_default();
+        assert_eq!(
+            cfg.backup_directory(),
+            "/home/testuser/.local/time-butler/backups"
+        );
+    }
+
+    // --- default target values ---
+
+    #[test]
+    fn test_new_default_week_target_hours() {
+        let cfg = make_default();
+        assert_eq!(cfg.week_target_hours(), 40.0);
+    }
+
+    #[test]
+    fn test_new_default_month_target_hours() {
+        let cfg = make_default();
+        assert_eq!(cfg.month_target_hours(), 160.0);
+    }
+
+    #[test]
+    fn test_new_default_weekly_target_for_month_is_false() {
+        let cfg = make_default();
+        assert!(!cfg.weekly_target_for_month());
+    }
+
+    // --- default backup values ---
+
+    #[test]
+    fn test_new_default_periodic_backup_disabled() {
+        let cfg = make_default();
+        assert!(!cfg.periodic_backup_enabled());
+    }
+
+    #[test]
+    fn test_new_default_periodic_backup_interval() {
+        let cfg = make_default();
+        assert_eq!(cfg.periodic_backup_interval(), 14);
+    }
+
+    #[test]
+    fn test_new_default_override_existing_backup_is_true() {
+        let cfg = make_default();
+        assert!(cfg.override_existing_backup());
+    }
+
+    // --- default version values ---
+
+    #[test]
+    fn test_new_default_always_force_halt_on_version_incompatibility_is_true() {
+        let cfg = make_default();
+        assert!(cfg.always_force_halt_on_version_incompatibility());
+    }
+
+    // --- get_as_string ---
+
+    #[test]
+    fn test_get_as_string_contains_all_key_labels() {
+        let s = make_default().get_as_string();
+
+        assert!(s.contains("time-butler-storage-directory"));
+        assert!(s.contains("time-butler-project-data-path"));
+        assert!(s.contains("time-butler-week-data-path"));
+        assert!(s.contains("time-butler-report-generation-directory"));
+        assert!(s.contains("time-butler-backups-directory"));
+        assert!(s.contains("total-week-target"));
+        assert!(s.contains("total-month-target"));
+        assert!(s.contains("use-total-week-target-for-month"));
+        assert!(s.contains("enable-periodic-backup"));
+        assert!(s.contains("periodic-backup-days-interval"));
+        assert!(s.contains("periodic-backup-override"));
+        assert!(s.contains("always-force-halt-on-version-incompatibility"));
+    }
+
+    #[test]
+    fn test_get_as_string_contains_expected_values() {
+        let s = make_default().get_as_string();
+        assert!(s.contains("/home/testuser/.local/time-butler"));
+        assert!(s.contains("40"));
+        assert!(s.contains("160"));
+        assert!(s.contains("14"));
+    }
+
+    // --- Clone ---
+
+    #[test]
+    fn test_clone_preserves_values() {
+        let cfg = make_default();
+        let cloned = cfg.clone();
+        assert_eq!(cfg.week_target_hours(), cloned.week_target_hours());
+        assert_eq!(cfg.storage_directory(), cloned.storage_directory());
+        assert_eq!(
+            cfg.periodic_backup_interval(),
+            cloned.periodic_backup_interval()
+        );
+    }
+
+    // --- Serde round-trip via JSON ---
+
+    #[test]
+    fn test_serde_round_trip() {
+        let cfg = make_default();
+        let json = serde_json::to_string(&cfg).unwrap();
+        let parsed: AppConfiguration = serde_json::from_str(&json).unwrap();
+        assert_eq!(cfg.week_target_hours(), parsed.week_target_hours());
+        assert_eq!(cfg.storage_directory(), parsed.storage_directory());
+        assert_eq!(cfg.backup_directory(), parsed.backup_directory());
+    }
+}

@@ -265,3 +265,150 @@ impl fmt::Display for Day {
         )
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::{Duration, Local, TimeZone};
+
+    #[test]
+    fn test_day_creation_defaults() {
+        let day = Day::new(None);
+
+        assert_eq!(day.hours(), 0.0);
+        assert_eq!(day.extra_info(), "");
+        assert!(day.starting_time().is_none());
+        assert!(day.ending_time().is_none());
+        assert!(!day.start_time_set());
+        assert!(!day.ending_time_set());
+        assert!(!day.closed());
+        assert_eq!(day.hours_paused(), 0.0);
+    }
+
+    #[test]
+    fn test_day_creation_with_extra_info() {
+        let day = Day::new(Some("Client work".to_string()));
+        assert_eq!(day.extra_info(), "Client work");
+    }
+
+    #[test]
+    fn test_day_set_extra_info() {
+        let mut day = Day::new(None);
+        day.set_extra_info("Updated".to_string());
+        assert_eq!(day.extra_info(), "Updated");
+    }
+
+    #[test]
+    fn test_day_set_starting_time_updates_flags_and_value() {
+        let mut day = Day::new(None);
+        let start = Local
+            .with_ymd_and_hms(2026, 1, 15, 9, 0, 0)
+            .single()
+            .unwrap();
+
+        day.set_starting_time(Some(&start));
+
+        assert!(day.start_time_set());
+        assert_eq!(day.starting_time(), Some(&start));
+        assert!(!day.closed());
+    }
+
+    #[test]
+    fn test_day_set_ending_time_updates_flags_and_value() {
+        let mut day = Day::new(None);
+        let end = Local
+            .with_ymd_and_hms(2026, 1, 15, 17, 0, 0)
+            .single()
+            .unwrap();
+
+        day.set_ending_time(Some(&end));
+
+        assert!(day.ending_time_set());
+        assert_eq!(day.ending_time(), Some(&end));
+        assert!(!day.closed());
+    }
+
+    #[test]
+    fn test_day_closes_and_calculates_hours_when_both_times_are_set() {
+        let mut day = Day::new(None);
+        let start = Local
+            .with_ymd_and_hms(2026, 1, 15, 9, 0, 0)
+            .single()
+            .unwrap();
+        let end = start + Duration::hours(8);
+
+        day.set_starting_time(Some(&start));
+        day.set_ending_time(Some(&end));
+
+        assert!(day.closed());
+        assert_eq!(day.hours(), 8.0);
+    }
+
+    #[test]
+    fn test_day_set_paused_time_before_start_is_ignored() {
+        let mut day = Day::new(None);
+
+        day.set_paused_time(2.0);
+
+        assert_eq!(day.hours_paused(), 0.0);
+    }
+
+    #[test]
+    fn test_day_set_paused_time_after_close_recalculates_hours() {
+        let mut day = Day::new(None);
+        let start = Local
+            .with_ymd_and_hms(2026, 1, 15, 9, 0, 0)
+            .single()
+            .unwrap();
+        let end = start + Duration::hours(9);
+
+        day.set_starting_time(Some(&start));
+        day.set_ending_time(Some(&end));
+        day.set_paused_time(1.0);
+
+        assert_eq!(day.hours_paused(), 1.0);
+        assert_eq!(day.hours(), 8.0);
+    }
+
+    #[test]
+    fn test_day_paused_time_greater_than_worked_hours_falls_back_to_worked_hours() {
+        let mut day = Day::new(None);
+        let start = Local
+            .with_ymd_and_hms(2026, 1, 15, 9, 0, 0)
+            .single()
+            .unwrap();
+        let end = start + Duration::hours(1);
+
+        day.set_starting_time(Some(&start));
+        day.set_ending_time(Some(&end));
+        day.set_paused_time(2.0);
+
+        assert_eq!(day.hours(), 1.0);
+    }
+
+    #[test]
+    fn test_day_updates_date_and_week_when_starting_time_is_set_last() {
+        let mut day = Day::new(None);
+        let start = Local
+            .with_ymd_and_hms(2026, 1, 16, 9, 0, 0)
+            .single()
+            .unwrap();
+        let end = start + Duration::hours(8);
+
+        day.set_ending_time(Some(&end));
+        day.set_starting_time(Some(&start));
+
+        assert_eq!(day.date(), start.date_naive());
+        assert_eq!(day.week(), start.iso_week().week());
+    }
+
+    #[test]
+    fn test_day_display_contains_key_fields() {
+        let day = Day::new(Some("Display test".to_string()));
+        let rendered = format!("{}", day);
+
+        assert!(rendered.contains("Created:"));
+        assert!(rendered.contains("starting_time"));
+        assert!(rendered.contains("hours -"));
+    }
+}
